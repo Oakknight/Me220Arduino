@@ -35,6 +35,10 @@ void setup()
     Serial.println("3 for binary count up - on timer");
     Serial.println("4 for binary count up - on button");
     Serial.println("5 for binary display of numbers [1-255]");
+
+    //Try moving the modselect here
+
+    
 }
 
 void loop()
