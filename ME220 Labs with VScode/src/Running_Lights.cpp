@@ -12,7 +12,7 @@ bool pushDown = false;                      // for the button problem
 int state;
 int timeCounter = 0; //To count time at the third mode
 int userInput;       // To hold the number sent by the user
-bool modeChosen = false;
+int modeChosen = 0;
 
 const byte numPins = 8; // num of leds
 
@@ -35,55 +35,48 @@ void setup()
     Serial.println("3 for binary count up - on timer");
     Serial.println("4 for binary count up - on button");
     Serial.println("5 for binary display of numbers [1-255]");
-
+    
     //Try moving the modselect here
 
+    if(Serial.available() > 0)
+        modeChosen = Serial.read(); //Read input and save it to a variable
     
+    Serial.println("You chose wisely!");
+    Serial.println("Now running gamemode ");
+    Serial.print(modeChosen);
+
+
+
+        
 }
 
 void loop()
 {
-    if (!modeChosen)
+    if (modeChosen) // If the user has selected a gamemode, run the switch and methods
     {
-        if (Serial.available() > 0)
-        {                                 //no need to run if there is no input
-            incomingMode = Serial.read(); //Read user input
-            switch (incomingMode)
-            { //switch to choose the working mode
-            case 49:
-                Serial.println("You chose wisely 1");
-                modeChosen = true;
-                RunningLights();
-                break;
-            case 50:
-                Serial.println("You chose wisely 2");
-                modeChosen = true;
-                RunningLightsPause();
-                break;
-            case 51:
-                Serial.println("You chose wisely 3");
-                modeChosen = true;
-                TimerCountUp();
-                break;
-            case 52:
-                Serial.println("You chose wisely 4");
-                modeChosen = true;
-                ButtonCountUp();
-                break;
-            case 53:
-                Serial.println("You chose wisely 5");
-                modeChosen = true;
-                BinaryDisplay();
-                break;
-            default:
-                if (modeChosen != true)
-                {
-                    Serial.println("You entered wrong input mate ");
-                    Serial.println(incomingMode);
-                }
+        switch (modeChosen)
+        {
+        case 1 :
+            /* code */
+            break;
+        case 2: 
+            //code
+            break;
 
-                break;
-            }
+        case 3:
+            //code
+            break;
+        case 4:
+            //code
+            break;
+        case 5:
+            //code
+            break;
+
+    
+        default:
+            Serial.println("Weird Mod Chosen, please reset machine");
+            break;
         }
     }
 }
