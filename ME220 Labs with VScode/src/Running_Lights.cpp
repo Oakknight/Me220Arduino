@@ -35,19 +35,15 @@ void setup()
     Serial.println("3 for binary count up - on timer");
     Serial.println("4 for binary count up - on button");
     Serial.println("5 for binary display of numbers [1-255]");
-    
+
     //Try moving the modselect here
 
-    if(Serial.available() > 0)
+    if (Serial.available() > 0)
         modeChosen = Serial.read(); //Read input and save it to a variable
-    
+
     Serial.println("You chose wisely!");
     Serial.println("Now running gamemode ");
     Serial.print(modeChosen);
-
-
-
-        
 }
 
 void loop()
@@ -56,24 +52,28 @@ void loop()
     {
         switch (modeChosen)
         {
-        case 1 :
+        case 1:
             /* code */
+            RunningLights();
             break;
-        case 2: 
-            //code
+        case 2:
+            //Vanilla Code will be run by attaching an interrupt first
+            attachInterrupt(digitalPinToInterrupt(interruptPin), StopTheLights, CHANGE);
+            //TODO: Make method stop till further change
+            //TODO: Use *CHANGE* with a loop and debouncing
+            RunningLights();
             break;
-
         case 3:
-            //code
+            TimerCountUp();
             break;
         case 4:
-            //code
+            //TODO: Decide whether to attach interrupt here or to Setup
+            //attachInterrupt(digitalPinToInterrupt(interruptPin), AddCount, RISING); //Use the button to call the increment method
             break;
         case 5:
             //code
             break;
 
-    
         default:
             Serial.println("Weird Mod Chosen, please reset machine");
             break;
@@ -102,11 +102,6 @@ void RunningLights()
     }
 }
 
-void RunningLightsPause()
-{ //Vanilla with pause, TODO: Fix
-    attachInterrupt(digitalPinToInterrupt(interruptPin), StopTheLights, CHANGE);
-    RunningLights();
-}
 
 void TimerCountUp() //Mode 3 Count in Binary with timer
 {
@@ -123,7 +118,7 @@ void TimerCountUp() //Mode 3 Count in Binary with timer
         /* get the length of the string */
         int binLength = binNumber.length();
         if (timeCounter <= 255)
-        {   // if we have less or equal to 255 presses
+        { // if we have less or equal to 255 presses
             // here is the scary code
             for (int i = 0, x = 1; i < binLength; i++, x += 2)
             {
@@ -142,10 +137,13 @@ void TimerCountUp() //Mode 3 Count in Binary with timer
     }
 }
 
+/* Unneccessary now\ due to including in Switch, will be removed in next push
+TODO:Include, debounce and delete method
 void ButtonCountUp() //Mode 4, Count in binary with the button
 {
     attachInterrupt(digitalPinToInterrupt(interruptPin), AddCount, RISING); //Use the button to call the increment method
 }
+/*/
 
 void BinaryDisplay() //Mode 5, Display a number entered by the user
 {
@@ -166,7 +164,7 @@ void BinaryDisplay() //Mode 5, Display a number entered by the user
             /* get the length of the string */
             int binLength = binNumber.length();
             if (userInput <= 255)
-            {   // if we have less or equal to 255 presses
+            { // if we have less or equal to 255 presses
                 // here is the scary code
                 for (int i = 0, x = 1; i < binLength; i++, x += 2)
                 {
@@ -208,7 +206,7 @@ void AddCount()
     /* get the length of the string */
     int binLength = binNumber.length();
     if (pressCounter <= 255)
-    {   // if we have less or equal to 255 presses
+    { // if we have less or equal to 255 presses
         // here is the scary code
         for (int i = 0, x = 1; i < binLength; i++, x += 2)
         {
