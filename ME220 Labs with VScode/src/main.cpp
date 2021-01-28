@@ -7,12 +7,12 @@ int incomingMode = 0;                       // for Mode input by da user
 int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //An array for all your favourite led pins!
 int pressCounter = 0;                       // To count button presses
 int debouncer = 100;                        // To wait in milliseconds
-bool pushDown = false;                      // for the button problem
-int state;
-int timeCounter = 0;         //To count time at the third mode
-int userInput;               // To hold the number sent by the user
-int modeChosen;              //To store the chosen gamemode
-unsigned long lastCount = 0; //For debouncing
+int pushDown = 0;                           // for the button problem
+int state;                                  //keeps the state of a ledpin for display
+int timeCounter = 0;                        //To count time at the third mode
+int userInput;                              // To hold the number sent by the user
+int modeChosen;                             //To store the chosen gamemode
+unsigned long lastCount = 0;                //For debouncing
 
 const byte numPins = 8; // num of leds
 
@@ -35,8 +35,14 @@ void RunningLights() //Vanilla, Mode 1
 }
 
 void StopTheLights() //For Mode 2, TODO:Fix this
-{
-    Serial.println("OMG STOP TOUCHING ME!");
+{                    //TODO:Add debouncing
+    pushDown = digitalRead(interruptPin);
+
+    while (pushDown == 1)
+    {
+        Serial.println("OMG STOP TOUCHING ME!");
+        pushDown = digitalRead(interruptPin);
+    }
 }
 
 void TimerCountUp() //Mode 3 Count in Binary with timer
@@ -115,7 +121,6 @@ void AddCount() // Mode 4, Function to increase count by one and update the ligh
 
         pressCounter++;
         Serial.println(pressCounter);
-        delay(debouncer); //TODO: Test for this
 
         /* convert presses to binary and store it as a string */
         String binNumber = String(pressCounter, BIN); //this is super convenient
@@ -178,6 +183,10 @@ void setup()
 
     if (modeChosen == 4)
         attachInterrupt(digitalPinToInterrupt(interruptPin), AddCount, RISING); //Use the button to call the increment method
+    if (modeChosen == 2)
+    {
+        attachInterrupt(digitalPinToInterrupt(interruptPin), StopTheLights, CHANGE);
+    }
 }
 
 void loop()
@@ -191,7 +200,7 @@ void loop()
         break;
     case 2:
         //Vanilla Code will be run by attaching an interrupt first
-        attachInterrupt(digitalPinToInterrupt(interruptPin), StopTheLights, CHANGE);
+
         //TODO: Make method stop till further change
         //TODO: Use *CHANGE* with a loop and debouncing
         RunningLights();
