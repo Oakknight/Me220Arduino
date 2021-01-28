@@ -8,76 +8,19 @@
 #define numPins 8        //number of LEDS
 #define debounceDelay 20 // will be used for debouncing
 
-const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11};
-volatile int bullets[] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-bool oneHit = false;
-bool twoHit = false;
-
-volatile bool shootOne = false;
-volatile bool shootTwo = false;
-
+const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11};  //Ledpins array
 
 void FirstGameLoop()
 {
   while (true)
   {
 
-    for (int i = 0; i < numPins; i++)
-    { // check all pins
-      if (bullets[i] == 1)
-      { //Checks if there is a bullet from p1, then move it forwards
-        if (i == numPins - 1)
-        {
-          shootOne = false;
-          twoHit = true;
-          Serial.println("Player Two has been Hit!");
-        }
-        bullets[i + 1] = 1; // moves the bullet left
-        bullets[i] = 0;     // clear the prev bullet
-      }
-
-      if (bullets[7 - i] == 2)
-      { //Checks if there is a bullet from p2, then move it forwards
-        if (i == numPins - 1)
-        {
-          shootTwo = false;
-          oneHit = true;
-          Serial.println("Player One has been Hit!");
-        }
-        bullets[6 - i] = 2; //moves the bullet right
-        bullets[7 - i] = 0; // clear the prev bullet
-      }
-      for (int j = 0; j < numPins; j++)
-      {
-        digitalWrite(ledPins[j], bullets[j]);
-      }
-      delay(runDelay);
-    }
+    
   }
 }
 
-void ShootOne()
-{
-  if (!shootOne)
-  {
-    shootOne = true;
-    Serial.println(" Player One Shoots ");
-    bullets[0] = 1; //Creates a bullet at starting location
-    digitalWrite(ledPins[0], HIGH);
-  }
-}
 
-void ShootTwo()
-{
-  if (!shootTwo)
-  {
-    shootTwo = true;
-    Serial.println(" Player Two Shoots ");
-    bullets[7] = 2; //Creates a bullet at starting location
-    digitalWrite(ledPins[7], HIGH);
-  }
-}
+
 
 void Diagnostics()
 { // A function to see if all leds have been connected correctly
@@ -104,8 +47,6 @@ void Diagnostics()
   Serial.println(" Diagnostics complete ");
 }
 
-
-
 void setup()
 {
 
@@ -119,8 +60,7 @@ void setup()
 
   //Diagnostics();// Run this function to diagnose your circuit
 
-  attachInterrupt(digitalPinToInterrupt(playerOne), ShootOne, FALLING);
-  attachInterrupt(digitalPinToInterrupt(playerTwo), ShootTwo, FALLING);
+  
 }
 
 void loop()
@@ -128,4 +68,3 @@ void loop()
   // put your main code here, to run repeatedly:
   FirstGameLoop();
 }
-
