@@ -6,7 +6,7 @@
 int incomingMode = 0;                       // for Mode input by da user
 int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //An array for all your favourite led pins!
 int pressCounter = 0;                       // To count button presses
-unsigned int debouncer = 100;                        // To wait in milliseconds
+unsigned int debouncer = 100;               // To wait in milliseconds
 int pushDown = 0;                           // for the button problem
 int state;                                  //keeps the state of a ledpin for display
 int timeCounter = 0;                        //To count time at the third mode
@@ -118,10 +118,10 @@ void AddCount() // Mode 4, Function to increase count by one and update the ligh
 void BinaryDisplay() //Mode 5, Display a number entered by the user
 {
     userInput = 0;
-    //int oldUserInput;
 
     if (Serial.available() > 0)
     {
+
         userInput = Serial.parseInt();
 
         Serial.print("User input is ");
@@ -133,7 +133,12 @@ void BinaryDisplay() //Mode 5, Display a number entered by the user
         int binLength = binNumber.length();
         if (userInput <= 255)
         { // if we have less or equal to 255 presses
-            // here is the scary code
+
+            for (int i = 0; i < numPins; i++) //reset the leds before new input
+            {
+                digitalWrite(ledPins[i], LOW);
+            }
+
             for (int i = 0, x = 1; i < binLength; i++, x += 2)
             {
                 if (binNumber[i] == '0')
@@ -149,8 +154,6 @@ void BinaryDisplay() //Mode 5, Display a number entered by the user
         }
     }
 }
-
-
 
 // There were some problems with the scope so I put the loop and setup functions here
 
