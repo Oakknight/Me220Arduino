@@ -9,9 +9,10 @@ int pressCounter = 0;                       // To count button presses
 int debouncer = 100;                        // To wait in milliseconds
 bool pushDown = false;                      // for the button problem
 int state;
-int timeCounter = 0; //To count time at the third mode
-int userInput;       // To hold the number sent by the user
-int modeChosen;      //To store the chosen gamemode
+int timeCounter = 0;         //To count time at the third mode
+int userInput;               // To hold the number sent by the user
+int modeChosen;              //To store the chosen gamemode
+unsigned long lastCount = 0; //For debouncing
 
 const byte numPins = 8; // num of leds
 
@@ -84,7 +85,7 @@ void BinaryDisplay() //Mode 5, Display a number entered by the user
         Serial.print("User input is ");
         Serial.println(userInput);
 
-        // convert user input to binary and store it as a string 
+        // convert user input to binary and store it as a string
         String binNumber = String(userInput, BIN);
         /* get the length of the string */
         int binLength = binNumber.length();
@@ -107,35 +108,40 @@ void BinaryDisplay() //Mode 5, Display a number entered by the user
     }
 }
 
-void AddCount() // Function to increase count by one and update the lights
+void AddCount() // Mode 4, Function to increase count by one and update the lights
 {
-    pressCounter++;
-    Serial.println(pressCounter);
-    delay(debouncer); //TODO: Test for this
+    if (millis() - lastCount > debouncer)
+    { //Only execute the function if enough time has passed from the last count
 
-    /* convert presses to binary and store it as a string */
-    String binNumber = String(pressCounter, BIN); //this is super convenient
+        pressCounter++;
+        Serial.println(pressCounter);
+        delay(debouncer); //TODO: Test for this
 
-    Serial.print("The binary for the count is ");
-    Serial.println(binNumber);
+        /* convert presses to binary and store it as a string */
+        String binNumber = String(pressCounter, BIN); //this is super convenient
 
-    /* get the length of the string */
-    int binLength = binNumber.length();
-    if (pressCounter <= 255)
-    { // if we have less or equal to 255 presses
-        // here is the scary code
-        for (int i = 0, x = 1; i < binLength; i++, x += 2)
-        {
-            if (binNumber[i] == '0')
-                state = LOW;
-            if (binNumber[i] == '1')
-                state = HIGH;
-            digitalWrite(ledPins[i] + binLength - x, state);
+        Serial.print("The binary for the count is ");
+        Serial.println(binNumber);
+        lastCount = millis(); //This records the last time of counting
+
+        /* get the length of the string */
+        int binLength = binNumber.length();
+        if (pressCounter <= 255)
+        { // if we have less or equal to 255 presses
+            // here is the scary code
+            for (int i = 0, x = 1; i < binLength; i++, x += 2)
+            {
+                if (binNumber[i] == '0')
+                    state = LOW;
+                if (binNumber[i] == '1')
+                    state = HIGH;
+                digitalWrite(ledPins[i] + binLength - x, state);
+            }
         }
-    }
-    else
-    {
-        Serial.println("Congratz you pressed the button too much!");
+        else
+        {
+            Serial.println("Congratz you pressed the button too much!");
+        }
     }
 }
 
