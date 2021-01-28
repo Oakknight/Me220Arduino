@@ -1,8 +1,8 @@
 #include <Arduino.h>
 
 #define interruptPin 3 // For Button Input
+#define runDelay 50 // delay before light moves
 
-#define runDelay 50
 
 int incomingMode = 0;                       // for Mode input by da user
 int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //An array for all your favourite led pins!
@@ -12,42 +12,13 @@ bool pushDown = false;                      // for the button problem
 int state;
 int timeCounter = 0; //To count time at the third mode
 int userInput;       // To hold the number sent by the user
-int modeChosen;     //To store the chosen gamemode 
+int modeChosen;      //To store the chosen gamemode
 
 const byte numPins = 8; // num of leds
 
-void setup()
+
+void RunningLights() //Vanilla, Mode 1
 {
-    // put your setup code here, to run once:
-    Serial.begin(9600);
-
-    //Led pins set to be output
-    for (int i = 0; i < numPins; i++)
-    {
-        pinMode(ledPins[i], OUTPUT);
-    }
-    pinMode(interruptPin, INPUT);
-
-    //waiting for input
-    Serial.println("Enter:");
-    Serial.println("1 for running lights");
-    Serial.println("2 for running lights with pause and resume");
-    Serial.println("3 for binary count up - on timer");
-    Serial.println("4 for binary count up - on button");
-    Serial.println("5 for binary display of numbers [1-255]");
-
-    while (modeChosen == 0) //This while loop waits for user input to proceed
-    {
-        if (Serial.available() > 0)
-            modeChosen = Serial.parseInt(); //Read input and save it to a variable
-    }
-
-    Serial.println("You chose wisely!");
-    Serial.print("Now running gamemode ");
-    Serial.print(modeChosen);
-}
-void RunningLights()
-{ //Vanilla, Mode 1
 
     for (int i = 0; i < numPins; i++)
     {
@@ -65,7 +36,7 @@ void RunningLights()
 }
 
 void TimerCountUp() //Mode 3 Count in Binary with timer
-{
+{                   //TODO: Go over this function just in case
 
     while (true)
     {
@@ -97,14 +68,6 @@ void TimerCountUp() //Mode 3 Count in Binary with timer
         delay(995); //Not 1000 ms to be more accurate
     }
 }
-
-/* Unneccessary now\ due to including in Switch, will be removed in next push
-TODO:Include, debounce and delete method
-void ButtonCountUp() //Mode 4, Count in binary with the button
-{
-    attachInterrupt(digitalPinToInterrupt(interruptPin), AddCount, RISING); //Use the button to call the increment method
-}
-/*/
 
 void BinaryDisplay() //Mode 5, Display a number entered by the user
 {
@@ -144,26 +107,23 @@ void BinaryDisplay() //Mode 5, Display a number entered by the user
     }
 }
 
-void StopTheLights()
-{ //TODO: FIX THIS
+void StopTheLights() //TODO: FIX THIS
+{ 
     Serial.println("OMG STOP TOUCHING ME!");
-    Serial.println(digitalRead(interruptPin));
-    pushDown = !pushDown;
-
-    while (pushDown)
-    { // I can not get out of this loop...
-        delay(10);
-    }
 }
 
-void AddCount()
-{ // Function to increase count by one and update the lights
+void AddCount() // Function to increase count by one and update the lights
+{ 
     pressCounter++;
     Serial.println(pressCounter);
     delay(debouncer); //TODO: Test for this
 
     /* convert presses to binary and store it as a string */
-    String binNumber = String(pressCounter, BIN);
+    String binNumber = String(pressCounter, BIN); //this is super convenient
+
+    Serial.print("The binary for the count is ");
+    Serial.println(binNumber);
+
     /* get the length of the string */
     int binLength = binNumber.length();
     if (pressCounter <= 255)
@@ -184,7 +144,42 @@ void AddCount()
     }
 }
 
-// There were some problems with the scope so I put the loop function here
+// There were some problems with the scope so I put the loop and setup functions here
+
+void setup()
+{
+
+    Serial.begin(9600);
+
+    //Led pins set to be output
+    for (int i = 0; i < numPins; i++)
+    {
+        pinMode(ledPins[i], OUTPUT);
+    }
+    pinMode(interruptPin, INPUT);
+
+    Serial.println("Enter:");
+    Serial.println("1 for running lights");
+    Serial.println("2 for running lights with pause and resume");
+    Serial.println("3 for binary count up - on timer");
+    Serial.println("4 for binary count up - on button");
+    Serial.println("5 for binary display of numbers [1-255]");
+
+    while (modeChosen == 0) //This while loop waits for user input to proceed
+    {
+        if (Serial.available() > 0)
+            modeChosen = Serial.parseInt(); //Read input and save it to a variable
+    }
+
+    Serial.println("You chose wisely!");
+    Serial.print("Now running gamemode ");
+    Serial.println(modeChosen);
+
+    if(modeChosen == 4)
+        attachInterrupt(digitalPinToInterrupt(interruptPin), AddCount, RISING); //Use the button to call the increment method
+
+}
+
 void loop()
 {
 
@@ -196,7 +191,7 @@ void loop()
         break;
     case 2:
         //Vanilla Code will be run by attaching an interrupt first
-        // attachInterrupt(digitalPinToInterrupt(interruptPin), StopTheLights, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(interruptPin), StopTheLights, CHANGE);
         //TODO: Make method stop till further change
         //TODO: Use *CHANGE* with a loop and debouncing
         RunningLights();
@@ -205,8 +200,8 @@ void loop()
         TimerCountUp();
         break;
     case 4:
-        //TODO: Decide whether to attach interrupt here or to Setup
-        //attachInterrupt(digitalPinToInterrupt(interruptPin), AddCount, RISING); //Use the button to call the increment method
+        //Interrupt attached in setup
+        
         break;
     case 5:
         //code
