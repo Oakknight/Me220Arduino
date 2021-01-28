@@ -6,7 +6,7 @@
 int incomingMode = 0;                       // for Mode input by da user
 int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //An array for all your favourite led pins!
 int pressCounter = 0;                       // To count button presses
-int debouncer = 100;                        // To wait in milliseconds
+unsigned int debouncer = 100;                        // To wait in milliseconds
 int pushDown = 0;                           // for the button problem
 int state;                                  //keeps the state of a ledpin for display
 int timeCounter = 0;                        //To count time at the third mode
@@ -79,41 +79,6 @@ void TimerCountUp() //Mode 3 Count in Binary with timer
     }
 }
 
-void BinaryDisplay() //Mode 5, Display a number entered by the user
-{
-    userInput = 0;
-    //int oldUserInput;
-
-    if (Serial.available() > 0)
-    {
-        userInput = Serial.parseInt();
-
-        Serial.print("User input is ");
-        Serial.println(userInput);
-
-        // convert user input to binary and store it as a string
-        String binNumber = String(userInput, BIN);
-        /* get the length of the string */
-        int binLength = binNumber.length();
-        if (userInput <= 255)
-        { // if we have less or equal to 255 presses
-            // here is the scary code
-            for (int i = 0, x = 1; i < binLength; i++, x += 2)
-            {
-                if (binNumber[i] == '0')
-                    state = LOW;
-                if (binNumber[i] == '1')
-                    state = HIGH;
-                digitalWrite(ledPins[i] + binLength - x, state);
-            }
-        }
-        else
-        {
-            Serial.println("We can not display that number");
-        }
-    }
-}
-
 void AddCount() // Mode 4, Function to increase count by one and update the lights
 {
     if (millis() - lastCount > debouncer)
@@ -149,6 +114,43 @@ void AddCount() // Mode 4, Function to increase count by one and update the ligh
         }
     }
 }
+
+void BinaryDisplay() //Mode 5, Display a number entered by the user
+{
+    userInput = 0;
+    //int oldUserInput;
+
+    if (Serial.available() > 0)
+    {
+        userInput = Serial.parseInt();
+
+        Serial.print("User input is ");
+        Serial.println(userInput);
+
+        // convert user input to binary and store it as a string
+        String binNumber = String(userInput, BIN);
+        /* get the length of the string */
+        int binLength = binNumber.length();
+        if (userInput <= 255)
+        { // if we have less or equal to 255 presses
+            // here is the scary code
+            for (int i = 0, x = 1; i < binLength; i++, x += 2)
+            {
+                if (binNumber[i] == '0')
+                    state = LOW;
+                if (binNumber[i] == '1')
+                    state = HIGH;
+                digitalWrite(ledPins[i] + binLength - x, state);
+            }
+        }
+        else
+        {
+            Serial.println("We can not display that number");
+        }
+    }
+}
+
+
 
 // There were some problems with the scope so I put the loop and setup functions here
 
@@ -194,28 +196,21 @@ void loop()
 
     switch (modeChosen)
     {
-    case 1:
-        /* code */
+    case 1: //Vanilla
         RunningLights();
         break;
-    case 2:
-        //Vanilla Code will be run by attaching an interrupt first
-
-        //TODO: Make method stop till further change
-        //TODO: Use *CHANGE* with a loop and debouncing
+    case 2: //Vanilla but interrupt was attached at setup
         RunningLights();
         break;
-    case 3:
+    case 3: //Could be debounced better
         TimerCountUp();
         break;
     case 4:
         //Interrupt attached in setup
-
         break;
     case 5:
         BinaryDisplay();
         break;
-
     default:
         Serial.println("Weird Mod Chosen, please reset machine");
         delay(1000);
