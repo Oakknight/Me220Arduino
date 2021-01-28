@@ -3,7 +3,9 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "C:/Users/yunus/.platformio/packages/framework-arduino-avr/cores/arduino",
+                "C:/Users/yunus/.platformio/packages/toolchain-atmelavr/avr/include"
             ],
             "defines": [
                 "_DEBUG",
