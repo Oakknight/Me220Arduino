@@ -1,8 +1,7 @@
 #include <Arduino.h>
 
 #define interruptPin 3 // For Button Input
-#define runDelay 50 // delay before light moves
-
+#define runDelay 50    // delay before light moves
 
 int incomingMode = 0;                       // for Mode input by da user
 int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //An array for all your favourite led pins!
@@ -15,7 +14,6 @@ int userInput;       // To hold the number sent by the user
 int modeChosen;      //To store the chosen gamemode
 
 const byte numPins = 8; // num of leds
-
 
 void RunningLights() //Vanilla, Mode 1
 {
@@ -33,6 +31,11 @@ void RunningLights() //Vanilla, Mode 1
         delay(runDelay); //Wait For It..
         digitalWrite(ledPins[i], LOW);
     } // Second loop to go left to right
+}
+
+void StopTheLights() //For Mode 2, TODO:Fix this
+{
+    Serial.println("OMG STOP TOUCHING ME!");
 }
 
 void TimerCountUp() //Mode 3 Count in Binary with timer
@@ -74,46 +77,38 @@ void BinaryDisplay() //Mode 5, Display a number entered by the user
     userInput = 0;
     //int oldUserInput;
 
-    while (true)
+    if (Serial.available() > 0)
     {
-        if (Serial.available() > 0)
-        {
-            userInput = Serial.parseInt();
+        userInput = Serial.parseInt();
 
-            Serial.println("User input is ");
-            Serial.println(userInput);
+        Serial.print("User input is ");
+        Serial.println(userInput);
 
-            /* convert presses to binary and store it as a string */
-            String binNumber = String(userInput, BIN);
-            /* get the length of the string */
-            int binLength = binNumber.length();
-            if (userInput <= 255)
-            { // if we have less or equal to 255 presses
-                // here is the scary code
-                for (int i = 0, x = 1; i < binLength; i++, x += 2)
-                {
-                    if (binNumber[i] == '0')
-                        state = LOW;
-                    if (binNumber[i] == '1')
-                        state = HIGH;
-                    digitalWrite(ledPins[i] + binLength - x, state);
-                }
-            }
-            else
+        // convert user input to binary and store it as a string 
+        String binNumber = String(userInput, BIN);
+        /* get the length of the string */
+        int binLength = binNumber.length();
+        if (userInput <= 255)
+        { // if we have less or equal to 255 presses
+            // here is the scary code
+            for (int i = 0, x = 1; i < binLength; i++, x += 2)
             {
-                Serial.println("We can not display that number");
+                if (binNumber[i] == '0')
+                    state = LOW;
+                if (binNumber[i] == '1')
+                    state = HIGH;
+                digitalWrite(ledPins[i] + binLength - x, state);
             }
+        }
+        else
+        {
+            Serial.println("We can not display that number");
         }
     }
 }
 
-void StopTheLights() //TODO: FIX THIS
-{ 
-    Serial.println("OMG STOP TOUCHING ME!");
-}
-
 void AddCount() // Function to increase count by one and update the lights
-{ 
+{
     pressCounter++;
     Serial.println(pressCounter);
     delay(debouncer); //TODO: Test for this
@@ -175,9 +170,8 @@ void setup()
     Serial.print("Now running gamemode ");
     Serial.println(modeChosen);
 
-    if(modeChosen == 4)
+    if (modeChosen == 4)
         attachInterrupt(digitalPinToInterrupt(interruptPin), AddCount, RISING); //Use the button to call the increment method
-
 }
 
 void loop()
@@ -201,10 +195,10 @@ void loop()
         break;
     case 4:
         //Interrupt attached in setup
-        
+
         break;
     case 5:
-        //code
+        BinaryDisplay();
         break;
 
     default:
