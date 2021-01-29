@@ -1,14 +1,23 @@
 #include <Arduino.h>
 
 //pins for the players' buttons
-#define playerOne 3 //blue button
-#define playerTwo 2 //red button
+#define playerOne 3 //blue button, left, starting from pin 11, index 7
+#define playerTwo 2 //red button, right, starting from pin 4, index 0
+// For reference, we will take blue button on the left and red button on the right
 
 #define runDelay 400     //delay in ms before light moves to the next point, Game speed property
 #define numPins 8        //number of LEDS
 #define debounceDelay 20 // will be used for debouncing
 
 const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //Ledpins array
+
+//At first, I tried to use an array that was to keep track of the bullets in the grid. Specifically, which LED lights up because of whose bullet
+//But that didn't seem to work fine and was quite buggy.
+//This time, I will try creating seperate variables which will hold the positions of the bullets, if they are present.
+int posBulletOne = -1; //We are initialising them from -1 since, 0 will actually be a position we will use
+int posBulletTwo = -1; //When a player shoots, we will set these variables to their designated bullet start positions
+//With each frame, bullets will be moved with respect to these two values
+
 volatile int activeShot = 0;
 // This variable will hold record for the active bullets. It will always be between [0-3].
 // If player one has a bullet it will be 1, if player two has a bullet it will be 2. If both players have bullets, it will be three.
@@ -43,15 +52,26 @@ void FirstGameLoop() // This will be the loop where our first game will run
       //This section could possibly be simplified to use less lines of code, but I am focusing on the function for now
     }
 
+    //Light up the LEDs using the posBullet variables
+    digitalWrite(ledPins[posBulletOne], HIGH);
+    digitalWrite(ledPins[posBulletTwo], HIGH);
+
+    delay(runDelay); //The period of a frame
+
+    //Turn off the LED's after the delay
+    digitalWrite(ledPins[posBulletOne], LOW);
+    digitalWrite(ledPins[posBulletTwo], LOW);
+    //Then move the bullets forward by adjusting their posBullet var values
+    posBulletTwo++; //One of them moves towards right while the other moves to the left
+    posBulletOne--; // Later we will add the code to check for collisions
+
     // If a player is stunned, their stun timer decreases by one in each frame
     { //Check Stun
       if (stunTimeTwo > 0)
         stunTimeTwo--;
       if (stunTimeOne > 0)
         stunTimeOne--;
-    }
-
-    delay(runDelay); //The period of a frame
+    } // Decreasing the stun after the delay in order to prevent a possible bug where the player can shoot when they still have 1 more frame to wait
   }
 }
 
@@ -60,6 +80,7 @@ void PlayerOneShoot()
   if (stunTimeOne == 0) // We don't want the player to shoot if they are already stunned
   {
     detachInterrupt(digitalPinToInterrupt(playerOne));
+    posBulletOne = 7; //The bullet is LED 8
     activeShot += 1;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerOne), PunishPlayerOne, RISING);
@@ -71,6 +92,7 @@ void PlayerTwoShoot()
   if (stunTimeTwo == 0)
   {
     detachInterrupt(digitalPinToInterrupt(playerTwo));
+    posBulletTwo = 0; //The bullet is at LED 1
     activeShot += 2;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerTwo), PunishPlayerTwo, RISING);
