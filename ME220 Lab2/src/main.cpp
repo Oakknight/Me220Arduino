@@ -28,6 +28,47 @@ volatile int activeShot = 0;
 int stunTimeOne = 0; //These variables will hold the remaining stun time in frames if a player tries to shoot again and gets punished.
 int stunTimeTwo = 0; //They will be set to 5 at the punish function, then will be decreased by one each frame, if they are bigger than zero
 
+void PunishPlayerOne()
+{ //If the player tries to shoot while there is still a bullet, they will be stunned.
+  //We detach the punishing interrupt and add a stun counter.
+  detachInterrupt(digitalPinToInterrupt(playerOne));
+  stunTimeOne = 5;
+}
+
+void PunishPlayerTwo()
+{ //If the player tries to shoot while there is still a bullet, they will be stunned.
+  //We detach the punishing interrupt and add a stun counter.
+  detachInterrupt(digitalPinToInterrupt(playerTwo));
+  stunTimeTwo = 5;
+}
+
+
+void PlayerOneShoot()
+{                       // When the first player shoots, we record the bullet and then detach their interrupt to shoot
+  if (stunTimeOne == 0) // We don't want the player to shoot if they are already stunned
+  {
+    detachInterrupt(digitalPinToInterrupt(playerOne));
+    posBulletOne = 7; //The bullet is LED 8
+    activeShot += 1;
+    //We then attach the new interrupt to punish the player if they try to shoot again
+    attachInterrupt(digitalPinToInterrupt(playerOne), PunishPlayerOne, RISING);
+  }
+}
+
+void PlayerTwoShoot()
+{ // When the second player shoots, we record the bullet and then detach their interrupt to shoot
+  if (stunTimeTwo == 0)
+  {
+    detachInterrupt(digitalPinToInterrupt(playerTwo));
+    posBulletTwo = 0; //The bullet is at LED 1
+    activeShot += 2;
+    //We then attach the new interrupt to punish the player if they try to shoot again
+    attachInterrupt(digitalPinToInterrupt(playerTwo), PunishPlayerTwo, RISING);
+  }
+  //Nothing happens if the player is stunned
+}
+
+
 void FirstGameLoop() // This will be the loop where our first game will run
 {
   while (true)
@@ -75,44 +116,9 @@ void FirstGameLoop() // This will be the loop where our first game will run
   }
 }
 
-void PlayerOneShoot()
-{                       // When the first player shoots, we record the bullet and then detach their interrupt to shoot
-  if (stunTimeOne == 0) // We don't want the player to shoot if they are already stunned
-  {
-    detachInterrupt(digitalPinToInterrupt(playerOne));
-    posBulletOne = 7; //The bullet is LED 8
-    activeShot += 1;
-    //We then attach the new interrupt to punish the player if they try to shoot again
-    attachInterrupt(digitalPinToInterrupt(playerOne), PunishPlayerOne, RISING);
-  }
-}
 
-void PlayerTwoShoot()
-{ // When the second player shoots, we record the bullet and then detach their interrupt to shoot
-  if (stunTimeTwo == 0)
-  {
-    detachInterrupt(digitalPinToInterrupt(playerTwo));
-    posBulletTwo = 0; //The bullet is at LED 1
-    activeShot += 2;
-    //We then attach the new interrupt to punish the player if they try to shoot again
-    attachInterrupt(digitalPinToInterrupt(playerTwo), PunishPlayerTwo, RISING);
-  }
-  //Nothing happens if the player is stunned
-}
 
-void PunishPlayerOne()
-{ //If the player tries to shoot while there is still a bullet, they will be stunned.
-  //We detach the punishing interrupt and add a stun counter.
-  detachInterrupt(digitalPinToInterrupt(playerOne));
-  stunTimeOne = 5;
-}
 
-void PunishPlayerTwo()
-{ //If the player tries to shoot while there is still a bullet, they will be stunned.
-  //We detach the punishing interrupt and add a stun counter.
-  detachInterrupt(digitalPinToInterrupt(playerTwo));
-  stunTimeTwo = 5;
-}
 
 void Diagnostics()
 { // A function to see if all leds have been connected correctly
