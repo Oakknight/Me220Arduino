@@ -90,7 +90,7 @@ void FirstGameLoop() // This will be the loop where our first game will run
     }
     if (activeShot == 2 && stunTimeOne < 1)
     {
-      attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerOneShoot, RISING);
+      attachInterrupt(digitalPinToInterrupt(playerOne), PlayerOneShoot, RISING);
     }
     //This section could possibly be simplified to use less lines of code, but I am focusing on the function for now
   }
@@ -121,11 +121,22 @@ void FirstGameLoop() // This will be the loop where our first game will run
   if (posBulletOne > -1)
   {
     posBulletOne--;
+    if (posBulletOne == -1)
+    {
+      activeShot -= 1; //Remove the bullet record
+    }
   }
 
   if (posBulletTwo > -1)
   {
     posBulletTwo++;
+  }
+
+  //Reset the second bullet if it goes off-grid
+  if (posBulletTwo > 7)
+  {
+    posBulletTwo = -1; //Reset Position
+    activeShot -= 2; //Remove the bullet record
   }
 
   //One of them moves towards right while the other moves to the left
@@ -154,7 +165,6 @@ void FirstGameLoop() // This will be the loop where our first game will run
 
   Serial.print("Bullet two: ");
   Serial.println(posBulletTwo);
-
 }
 
 void Diagnostics()
@@ -198,6 +208,7 @@ void setup()
   //We will ask for input regarding the game mode, then execute that mode on the loop
 
   //TODO: Add selection
+  Serial.println("Ready");
 }
 
 void loop()
