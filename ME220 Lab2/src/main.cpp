@@ -5,7 +5,7 @@
 #define playerTwo 2 //red button, right, starting from pin 4, index 0
 // For reference, we will take blue button on the left and red button on the right
 
-#define runDelay 400     //delay in ms before light moves to the next point, Game speed property
+#define runDelay 1000    //delay in ms before light moves to the next point, Game speed property
 #define numPins 8        //number of LEDS
 #define debounceDelay 20 // will be used for debouncing
 
@@ -31,6 +31,7 @@ int stunTimeTwo = 0; //They will be set to 5 at the punish function, then will b
 void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
+  Serial.println("p1p");
   detachInterrupt(digitalPinToInterrupt(playerOne));
   stunTimeOne = 5;
 }
@@ -38,15 +39,16 @@ void PunishPlayerOne()
 void PunishPlayerTwo()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
+  Serial.println("p2p");
   detachInterrupt(digitalPinToInterrupt(playerTwo));
   stunTimeTwo = 5;
 }
-
 
 void PlayerOneShoot()
 {                       // When the first player shoots, we record the bullet and then detach their interrupt to shoot
   if (stunTimeOne == 0) // We don't want the player to shoot if they are already stunned
   {
+    Serial.println("p1s");
     detachInterrupt(digitalPinToInterrupt(playerOne));
     posBulletOne = 7; //The bullet is LED 8
     activeShot += 1;
@@ -59,6 +61,7 @@ void PlayerTwoShoot()
 { // When the second player shoots, we record the bullet and then detach their interrupt to shoot
   if (stunTimeTwo == 0)
   {
+    Serial.println("p2s");
     detachInterrupt(digitalPinToInterrupt(playerTwo));
     posBulletTwo = 0; //The bullet is at LED 1
     activeShot += 2;
@@ -68,57 +71,91 @@ void PlayerTwoShoot()
   //Nothing happens if the player is stunned
 }
 
-
 void FirstGameLoop() // This will be the loop where our first game will run
 {
-  while (true)
-  {
-    //The game will consist of "frames" which have a period of one LED movement between them
-    //  runDelay will be this time and it will specify how fast the game will run
 
-    {                      // See if the player can shoot
-      if (activeShot == 0) // If there are no bullets, we will attach two interrupts that allows both players to shoot
-      {
-        attachInterrupt(digitalPinToInterrupt(playerOne), PlayerOneShoot, RISING);
-        attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerTwoShoot, RISING);
-      }
-      if (activeShot == 1)
-      {
-        attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerTwoShoot, RISING);
-      }
-      if (activeShot == 2)
-      {
-        attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerOneShoot, RISING);
-      }
-      //This section could possibly be simplified to use less lines of code, but I am focusing on the function for now
+  //The game will consist of "frames" which have a period of one LED movement between them
+  //  runDelay will be this time and it will specify how fast the game will run
+  delay(runDelay);
+
+  {                      // See if the player can shoot
+    if (activeShot == 0) // If there are no bullets, we will attach two interrupts that allows both players to shoot
+    {
+      attachInterrupt(digitalPinToInterrupt(playerOne), PlayerOneShoot, RISING);
+      attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerTwoShoot, RISING);
     }
-
-    //Light up the LEDs using the posBullet variables
-    digitalWrite(ledPins[posBulletOne], HIGH);
-    digitalWrite(ledPins[posBulletTwo], HIGH);
-
-    delay(runDelay); //The period of a frame
-
-    //Turn off the LED's after the delay
-    digitalWrite(ledPins[posBulletOne], LOW);
-    digitalWrite(ledPins[posBulletTwo], LOW);
-    //Then move the bullets forward by adjusting their posBullet var values
-    posBulletTwo++; //One of them moves towards right while the other moves to the left
-    posBulletOne--; // Later we will add the code to check for collisions
-
-    // If a player is stunned, their stun timer decreases by one in each frame
-    { //Check Stun
-      if (stunTimeTwo > 0)
-        stunTimeTwo--;
-      if (stunTimeOne > 0)
-        stunTimeOne--;
-    } // Decreasing the stun after the delay in order to prevent a possible bug where the player can shoot when they still have 1 more frame to wait
+    if (activeShot == 1 && stunTimeTwo < 1)
+    {
+      attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerTwoShoot, RISING);
+    }
+    if (activeShot == 2 && stunTimeOne < 1)
+    {
+      attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerOneShoot, RISING);
+    }
+    //This section could possibly be simplified to use less lines of code, but I am focusing on the function for now
   }
+
+  //Light up the LEDs using the posBullet variables
+  if (posBulletOne > -1)
+  {
+    digitalWrite(ledPins[posBulletOne], HIGH);
+    //Serial.print("LED set to HIGH");
+    //Serial.println(posBulletOne);
+  }
+
+  if (posBulletTwo > -1)
+  {
+    digitalWrite(ledPins[posBulletTwo], HIGH);
+    //Serial.print("LED set to HIGH");
+    //Serial.println(posBulletTwo);
+  }
+
+  delay(runDelay); //The period of a frame
+
+  //Turn off the LED's after the delay
+  digitalWrite(ledPins[posBulletOne], LOW);
+  digitalWrite(ledPins[posBulletTwo], LOW);
+
+  //Then move the bullets forward by adjusting their posBullet var values ONLY IF THEY WERE ALREADY NOT -1
+
+  if (posBulletOne > -1)
+  {
+    posBulletOne--;
+  }
+
+  if (posBulletTwo > -1)
+  {
+    posBulletTwo++;
+  }
+
+  //One of them moves towards right while the other moves to the left
+  //Later we will add the code to check for collisions
+
+  // If a player is stunned, their stun timer decreases by one in each frame
+  //Check Stun
+  if (stunTimeTwo > 0)
+  {
+    Serial.print("P2 is stunned: ");
+    Serial.println(stunTimeTwo);
+    stunTimeTwo--;
+  }
+
+  if (stunTimeOne > 0)
+  {
+
+    Serial.print("P1 is stunned: ");
+    Serial.println(stunTimeOne);
+    stunTimeOne--;
+  }
+  // Decreasing the stun after the delay in order to prevent a possible bug where the player can shoot when they still have 1 more frame to wait
+
+  Serial.print("Bullet one: ");
+  Serial.println(posBulletOne);
+
+  Serial.print("Bullet two: ");
+  Serial.println(posBulletTwo);
+
 }
-
-
-
-
 
 void Diagnostics()
 { // A function to see if all leds have been connected correctly
@@ -127,19 +164,19 @@ void Diagnostics()
   for (int i = 0; i < numPins; i++)
   {
     digitalWrite(ledPins[i], HIGH);
-    Serial.println("Led ");
+    Serial.print("Led ");
     Serial.print(i);
     Serial.print(" should now be HIGH at pin ");
-    Serial.print(ledPins[i]);
+    Serial.println(ledPins[i]);
     delay(1000);
   }
   for (int i = 7; i > -1; i--)
   {
     digitalWrite(ledPins[i], LOW);
-    Serial.println("Led ");
+    Serial.print("Led ");
     Serial.print(i);
     Serial.print(" should now be LOW at pin ");
-    Serial.print(ledPins[i]);
+    Serial.println(ledPins[i]);
     delay(1000);
   }
   Serial.println(" Diagnostics complete ");
