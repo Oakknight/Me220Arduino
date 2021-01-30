@@ -32,6 +32,11 @@ void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
   Serial.println("p1p");
+  posBulletOne = -1; //Reset the bullet position and remove bullet from the activeShot record
+  if (activeShot == 1)
+    activeShot = 0;
+  if (activeShot == 3)
+    activeShot -= 1;
   detachInterrupt(digitalPinToInterrupt(playerOne));
   stunTimeOne = 5;
 }
@@ -40,6 +45,11 @@ void PunishPlayerTwo()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
   Serial.println("p2p");
+  posBulletTwo = -1; //Reset bullet pos and remove bullet from activeShot record
+  if (activeShot == 2)
+    activeShot = 0; //I could instead just lower it by 2 but I believe this way would be more foolproof
+  if (activeShot == 3)
+    activeShot -= 2;
   detachInterrupt(digitalPinToInterrupt(playerTwo));
   stunTimeTwo = 5;
 }
@@ -136,7 +146,7 @@ void FirstGameLoop() // This will be the loop where our first game will run
   if (posBulletTwo > 7)
   {
     posBulletTwo = -1; //Reset Position
-    activeShot -= 2; //Remove the bullet record
+    activeShot -= 2;   //Remove the bullet record
   }
 
   //One of them moves towards right while the other moves to the left
@@ -160,11 +170,14 @@ void FirstGameLoop() // This will be the loop where our first game will run
   }
   // Decreasing the stun after the delay in order to prevent a possible bug where the player can shoot when they still have 1 more frame to wait
 
+  /*
   Serial.print("Bullet one: ");
   Serial.println(posBulletOne);
 
   Serial.print("Bullet two: ");
   Serial.println(posBulletTwo);
+  */
+ 
 }
 
 void Diagnostics()
