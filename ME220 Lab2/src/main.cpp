@@ -11,11 +11,13 @@
 
 const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //Ledpins array
 
-volatile int lastPressTimeA = 0; //These will be used for debouncing
-volatile int lastPressTimeB = 0; //There are two because we don't want to debounce another players button push
+volatile long lastPressTimeA = 0; //These will be used for debouncing
+volatile long lastPressTimeB = 0; //There are two because we don't want to debounce another players button push
 
 int scoreA = 0; // These will be used to keep track of the scores of th players
 int scoreB = 0;
+
+//General variables for the first game
 
 //At first, I tried to use an array that was to keep track of the bullets in the grid. Specifically, which LED lights up because of whose bullet
 //But that didn't seem to work fine and was quite buggy.
@@ -33,6 +35,67 @@ volatile int activeShot = 0;
 
 int stunTimeOne = 0; //These variables will hold the remaining stun time in frames if a player tries to shoot again and gets punished.
 int stunTimeTwo = 0; //They will be set to 5 at the punish function, then will be decreased by one each frame, if they are bigger than zero
+
+//General variables for the second game
+
+unsigned long time_target = 0; //These are of type long since time in ms could be a pretty big number
+unsigned long time_guess = 0;
+unsigned long target_start = 0;
+unsigned long guess_start = 0;
+
+int nextPlayer = 0; // We will change this value to change the guessing and target setting player
+bool targetSet = false;
+bool guessSet = false;
+bool phaseSet = false;
+bool phaseGuess = false;
+bool lights = false;
+
+void SwitchPlayer() // Simple function to switch players
+{
+  if (nextPlayer == 2)
+    nextPlayer = 3;
+  if (nextPlayer == 3)
+    nextPlayer = 2;
+}
+
+void SetTargetTime()
+{
+  if (millis() - target_start > debounceDelay)
+  { //only register button after debouncing
+    detachInterrupt(digitalPinToInterrupt(nextPlayer));
+    time_target = millis() - target_start;
+    targetSet = true;
+    //After recording the time button was pressed down, we change the nextPlayer value
+    SwitchPlayer();
+    lights = false;
+  }
+}
+void StartTargetTime() //We record the time when the button is pressed down,
+{                      // remove the interrupt, then attach another to record when the button is released
+  detachInterrupt(digitalPinToInterrupt(nextPlayer));
+  target_start = millis();
+  lights = true;
+  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, FALLING);
+}
+
+void SetGuessTime()
+{
+  if (millis() - guess_start > debounceDelay)
+  {
+    detachInterrupt(digitalPinToInterrupt(nextPlayer));
+    time_guess = millis() - guess_start;
+    guessSet = true;
+    lights = false;
+  }
+}
+
+void StartGuessTime() //Same process we used to record the target time
+{
+  detachInterrupt(digitalPinToInterrupt(nextPlayer));
+  guess_start = millis();
+  lights = true;
+  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, FALLING);
+}
 
 void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
@@ -230,16 +293,65 @@ void FirstGameLoop() // This will be the loop where our first game will run
   Serial.println(posBulletTwo);
   */
 
-  if (scoreA == 5) //Game over, return to menu
+  delay(runDelay);
+}
+
+void SecondGameLoop() // This will be the loop where the second game will run
+
+{
+
+  //We attach the interrupt to the player who will be guessing
+  if (!targetSet) // The following code will be executed once for each set
   {
-    Serial.print("GAME OVER, PLAYER ONE HAS WON!");
+    if (!phaseSet)
+    {
+      Serial.print("Player ");
+      Serial.print(nextPlayer);
+      Serial.println("will be setting target");
+      attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, RISING);
+      phaseSet = true;
+    }
   }
-  if (scoreB == 5) //Game over, return to menu
+  //We will change the "nextPlayer" to keep track of which player will go
+
+  //After attaching the interrupt we will wait for the button press and recordings
+
+  if (targetSet) //After we set the target, we will prompt the guessing player
   {
-    Serial.print("GAME OVER, PLAYER TWO HAS WON!");
+    Serial.println("Target time has been set");
+    Serial.print(nextPlayer);
+    Serial.println(" will now try to guess the time.");
+    attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, CHANGE);
   }
 
-  delay(runDelay);
+  //Whenever there is a process of keeping time, we set the lights var to true;
+  // We want the LEDs to light up whenever a button is being pressed
+
+  //Set all LEDs to their required state
+  for (size_t i = 0; i < 8; i++)
+  {
+    digitalWrite(ledPins[i], lights);
+  }
+
+  if (guessSet) // If a guess has been made, we will compare the target and guess values to find a winner for the set.
+  {
+    if (abs(time_target - time_guess) > time_target / 10) // If the time difference is not in our accepted range, target setting player wins.
+    {
+      SwitchPlayer();
+    }
+    Serial.print("Player ");
+    Serial.print(nextPlayer);
+    Serial.println("has won this set!");
+    //Assign a point to the winning player
+    if (nextPlayer == 2)
+    {
+      scoreB++;
+    }
+    else if (nextPlayer == 3)
+    {
+      scoreA++;
+    }
+  }
 }
 
 void Diagnostics()
@@ -290,5 +402,16 @@ void loop()
 {
   // First or second game will be run according to the information coming from the setup function
   //TODO: Add if for the game select
-  FirstGameLoop();
+  //FirstGameLoop();
+
+  //GameOver Check for both games
+  //TODO: Add return to menu
+  if (scoreA == 5) //Game over, return to menu
+  {
+    Serial.print("GAME OVER, PLAYER ONE HAS WON!");
+  }
+  if (scoreB == 5) //Game over, return to menu
+  {
+    Serial.print("GAME OVER, PLAYER TWO HAS WON!");
+  }
 }
