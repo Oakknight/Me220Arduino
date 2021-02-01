@@ -38,7 +38,7 @@ void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
 
-  if (millis() - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
+  if (millis() - lastPressTimeA > debounceDelay) //Only execute if enough time to debounce has passed
   {
     //Serial.println("p1p");
     digitalWrite(ledPins[posBulletOne], LOW);
