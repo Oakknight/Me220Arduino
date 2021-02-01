@@ -18,6 +18,7 @@ int scoreA = 0; // These will be used to keep track of the scores of th players
 int scoreB = 0;
 
 int gameMode = 0;
+bool gameChosen = false;
 
 //General variables for the first game
 
@@ -447,15 +448,26 @@ void loop()
     delay(2000);
     if (Serial.available() > 0)
     {
-      gameMode = Serial.read();
+      gameMode = Serial.parseInt();
     }
 
     break;
   case 1:
+    if (!gameChosen)
+    {
+      Serial.println("Game mode 1 chosen, LIGHT BATTLE!");
+      gameChosen = true;
+    }
+
     FirstGameLoop();
     break;
 
   case 2:
+    if (!gameChosen)
+    {
+      Serial.println("Game mode 2 chosen, GUESSING GAME!");
+      gameChosen = true;
+    }
     SecondGameLoop();
     break;
 
@@ -472,9 +484,11 @@ void loop()
   if (scoreA == 5) //Game over, return to menu
   {
     Serial.print("GAME OVER, PLAYER ONE HAS WON!");
+    ResetGame();
   }
   if (scoreB == 5) //Game over, return to menu
   {
     Serial.print("GAME OVER, PLAYER TWO HAS WON!");
+    ResetGame();
   }
 }
