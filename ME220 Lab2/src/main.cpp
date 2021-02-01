@@ -17,6 +17,8 @@ volatile long lastPressTimeB = 0; //There are two because we don't want to debou
 int scoreA = 0; // These will be used to keep track of the scores of th players
 int scoreB = 0;
 
+int gameMode = 0;
+
 //General variables for the first game
 
 //At first, I tried to use an array that was to keep track of the bullets in the grid. Specifically, which LED lights up because of whose bullet
@@ -80,7 +82,7 @@ void StartTargetTime() //We record the time when the button is pressed down,
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
   target_start = millis();
   lights = true;
-  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, FALLING);
+  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, LOW);
 }
 
 void SetGuessTime()
@@ -99,7 +101,7 @@ void StartGuessTime() //Same process we used to record the target time
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
   guess_start = millis();
   lights = true;
-  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, FALLING);
+  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, LOW);
 }
 
 void ResetSet()
@@ -381,6 +383,14 @@ void SecondGameLoop() // This will be the loop where the second game will run
   }
 }
 
+void ResetGame()
+{
+  scoreA = 0;
+  scoreB = 0;
+  gameMode = 0;
+  Serial.println("Returning to the menu");
+}
+
 void Diagnostics()
 { // A function to see if all leds have been connected correctly
   Serial.println("Running Diagnostics");
@@ -429,9 +439,33 @@ void loop()
 {
   // First or second game will be run according to the information coming from the setup function
   //TODO: Add if for the game select
+
+  switch (gameMode)
+  {
+  case 0:
+    Serial.println("Please choose a gamemode: 1 or 2");
+    delay(2000);
+    if (Serial.available() > 0)
+    {
+      gameMode = Serial.read();
+    }
+
+    break;
+  case 1:
+    FirstGameLoop();
+    break;
+
+  case 2:
+    SecondGameLoop();
+    break;
+
+  default:
+    Serial.println("Weird input");
+    break;
+  }
   //FirstGameLoop();
 
-  SecondGameLoop();
+  //SecondGameLoop();
 
   //GameOver Check for both games
   //TODO: Add return to menu
