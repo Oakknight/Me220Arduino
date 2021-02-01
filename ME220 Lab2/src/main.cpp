@@ -37,7 +37,7 @@ int stunTimeTwo = 0; //They will be set to 5 at the punish function, then will b
 void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
-
+  noInterrupts();
   if (millis() - lastPressTimeA > debounceDelay) //Only execute if enough time to debounce has passed
   {
     //Serial.println("p1p");
@@ -49,12 +49,14 @@ void PunishPlayerOne()
       activeShot -= 1;
     detachInterrupt(digitalPinToInterrupt(playerOne));
     stunTimeOne = 5;
+    interrupts();
   }
 }
 
 void PunishPlayerTwo()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
+  noInterrupts();
 
   if (millis() - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
   {
@@ -68,12 +70,14 @@ void PunishPlayerTwo()
     detachInterrupt(digitalPinToInterrupt(playerTwo));
     stunTimeTwo = 5;
   }
+  interrupts();
 }
 
 void PlayerOneShoot()
 {                       // When the first player shoots, we record the bullet and then detach their interrupt to shoot
   if (stunTimeOne == 0) // We don't want the player to shoot if they are already stunned
   {
+    noInterrupts();
     Serial.println("p1s");
     detachInterrupt(digitalPinToInterrupt(playerOne));
     posBulletOne = 7; //The bullet is LED 8
@@ -81,6 +85,7 @@ void PlayerOneShoot()
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerOne), PunishPlayerOne, RISING);
     lastPressTimeA = millis(); //Save the button press time of Player One
+    interrupts();
   }
 }
 
@@ -88,6 +93,7 @@ void PlayerTwoShoot()
 { // When the second player shoots, we record the bullet and then detach their interrupt to shoot
   if (stunTimeTwo == 0)
   {
+    noInterrupts();
     Serial.println("p2s");
     detachInterrupt(digitalPinToInterrupt(playerTwo));
     posBulletTwo = 0; //The bullet is at LED 1
@@ -95,6 +101,7 @@ void PlayerTwoShoot()
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerTwo), PunishPlayerTwo, RISING);
     lastPressTimeB = millis(); //Save the button pres time of Player Two
+    interrupts();
   }
   //Nothing happens if the player is stunned
 }
