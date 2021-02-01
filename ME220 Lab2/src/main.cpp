@@ -7,9 +7,12 @@
 
 #define runDelay 1000    //delay in ms before light moves to the next point, Game speed property
 #define numPins 8        //number of LEDS
-#define debounceDelay 20 // will be used for debouncing
+#define debounceDelay 50 // will be used for debouncing
 
 const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //Ledpins array
+
+volatile int lastPressTimeA = 0; //These will be used for debouncing
+volatile int lastPressTimeB = 0; //There are two because we don't want to debounce another players button push
 
 //At first, I tried to use an array that was to keep track of the bullets in the grid. Specifically, which LED lights up because of whose bullet
 //But that didn't seem to work fine and was quite buggy.
@@ -31,32 +34,37 @@ int stunTimeTwo = 0; //They will be set to 5 at the punish function, then will b
 void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
-  Serial.println("p1p");
-  posBulletOne = -1; //Reset the bullet position and remove bullet from the activeShot record
-  if (activeShot == 1)
-  {
-    activeShot = 0;
-  }
 
-  if (activeShot == 3)
+  if (millis() - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
   {
-    activeShot -= 1;
+    //Serial.println("p1p");
+    digitalWrite(ledPins[posBulletOne], LOW);
+    posBulletOne = -1; //Reset the bullet position and remove bullet from the activeShot record
+    if (activeShot == 1)
+      activeShot = 0;
+    if (activeShot == 3)
+      activeShot -= 1;
+    detachInterrupt(digitalPinToInterrupt(playerOne));
+    stunTimeOne = 5;
   }
-  detachInterrupt(digitalPinToInterrupt(playerOne));
-  stunTimeOne = 5;
 }
 
 void PunishPlayerTwo()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
-  Serial.println("p2p");
-  posBulletTwo = -1; //Reset bullet pos and remove bullet from activeShot record
-  if (activeShot == 2)
-    activeShot = 0; //I could instead just lower it by 2 but I believe this way would be more foolproof
-  if (activeShot == 3)
-    activeShot -= 2;
-  detachInterrupt(digitalPinToInterrupt(playerTwo));
-  stunTimeTwo = 5;
+
+  if (millis() - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
+  {
+    //Serial.println("p2p");
+    digitalWrite(ledPins[posBulletTwo], LOW);
+    posBulletTwo = -1; //Reset bullet pos and remove bullet from activeShot record
+    if (activeShot == 2)
+      activeShot = 0; //I could instead just lower it by 2 but I believe this way would be more foolproof
+    if (activeShot == 3)
+      activeShot -= 2;
+    detachInterrupt(digitalPinToInterrupt(playerTwo));
+    stunTimeTwo = 5;
+  }
 }
 
 void PlayerOneShoot()
@@ -69,6 +77,7 @@ void PlayerOneShoot()
     activeShot += 1;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerOne), PunishPlayerOne, RISING);
+    lastPressTimeA = millis(); //Save the button press time of Player One
   }
 }
 
@@ -82,6 +91,7 @@ void PlayerTwoShoot()
     activeShot += 2;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerTwo), PunishPlayerTwo, RISING);
+    lastPressTimeB = millis(); //Save the button pres time of Player Two
   }
   //Nothing happens if the player is stunned
 }
@@ -226,7 +236,7 @@ void setup()
   pinMode(playerOne, INPUT); //Setting up input pin for P1
   pinMode(playerOne, INPUT); //Setting up input pin for P2
 
-  //Diagnostics();// Run this function to diagnose your circuit
+  Diagnostics();// Run this function to diagnose your circuit
 
   //We will ask for input regarding the game mode, then execute that mode on the loop
 
