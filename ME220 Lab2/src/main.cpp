@@ -20,6 +20,8 @@ int scoreB = 0;
 int gameMode = 0;
 bool gameChosen = false;
 
+int winner = 0;
+
 //General variables for the first game
 
 //At first, I tried to use an array that was to keep track of the bullets in the grid. Specifically, which LED lights up because of whose bullet
@@ -46,7 +48,7 @@ unsigned long time_guess = 0;
 unsigned long target_start = 0;
 unsigned long guess_start = 0;
 
-int nextPlayer = 3; // We will change this value to change the guessing and target setting player
+volatile int nextPlayer = 3; // We will change this value to change the guessing and target setting player
 bool targetSet = false;
 bool guessSet = false;
 bool phaseSet = false;
@@ -55,13 +57,17 @@ bool lights = false;
 
 void SwitchPlayer() // Simple function to switch players
 {
-  if (nextPlayer == 2)
+  switch (nextPlayer)
   {
+  case 2:
     nextPlayer = 3;
-  }
-  else if (nextPlayer == 3)
-  {
+    break;
+  case 3:
     nextPlayer = 2;
+    break;
+
+  default:
+    break;
   }
 }
 
@@ -370,9 +376,15 @@ void SecondGameLoop() // This will be the loop where the second game will run
     if (abs(time_target - time_guess) > time_target / 10) // If the time difference is not in our accepted range, target setting player wins.
     {
       SwitchPlayer();
+      winner = nextPlayer;
+      SwitchPlayer();
+    }
+    else
+    {
+      winner = nextPlayer;
     }
     Serial.print("Player ");
-    Serial.print(nextPlayer);
+    Serial.print(winner);
     Serial.println(" has won this set!");
     Serial.print("Target time: ");
     Serial.println(time_target);
@@ -443,16 +455,20 @@ void setup()
   //TODO: Add selection
   Serial.println("Ready");
 
-  Serial.println("Switch func");
+  /* Serial.println("Switch func");
   Serial.println(nextPlayer);
+  SwitchPlayer();
   Serial.println("Should change now");
   Serial.println(nextPlayer);
+  SwitchPlayer();
   Serial.println("Should change now");
   Serial.println(nextPlayer);
+  SwitchPlayer();
   Serial.println("Should change now");
   Serial.println(nextPlayer);
+  SwitchPlayer();
   Serial.println("Should change now");
-  Serial.println(nextPlayer);
+  Serial.println(nextPlayer); */
 }
 
 void loop()
