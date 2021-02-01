@@ -5,7 +5,7 @@
 #define playerTwo 2 //red button, right, starting from pin 4, index 0
 // For reference, we will take blue button on the left and red button on the right
 
-#define runDelay 1000    //delay in ms before light moves to the next point, Game speed property
+#define runDelay 500     //delay in ms before light moves to the next point, Game speed property
 #define numPins 8        //number of LEDS
 #define debounceDelay 50 // will be used for debouncing
 
@@ -13,6 +13,9 @@ const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //Ledpins array
 
 volatile int lastPressTimeA = 0; //These will be used for debouncing
 volatile int lastPressTimeB = 0; //There are two because we don't want to debounce another players button push
+
+int scoreA = 0; // These will be used to keep track of the scores of th players
+int scoreB = 0;
 
 //At first, I tried to use an array that was to keep track of the bullets in the grid. Specifically, which LED lights up because of whose bullet
 //But that didn't seem to work fine and was quite buggy.
@@ -101,7 +104,6 @@ void FirstGameLoop() // This will be the loop where our first game will run
 
   //The game will consist of "frames" which have a period of one LED movement between them
   //  runDelay will be this time and it will specify how fast the game will run
-  delay(runDelay);
 
   {                      // See if the player can shoot
     if (activeShot == 0) // If there are no bullets, we will attach two interrupts that allows both players to shoot
@@ -147,14 +149,32 @@ void FirstGameLoop() // This will be the loop where our first game will run
   digitalWrite(ledPins[posBulletOne], LOW);
   digitalWrite(ledPins[posBulletTwo], LOW);
 
-  //Then move the bullets forward by adjusting their posBullet var values ONLY IF THEY WERE ALREADY NOT -1
+  //Check for collision before moving the bullets
 
+  if (posBulletTwo != -1)
+  {
+    if (posBulletOne == posBulletTwo || posBulletOne - 1 == posBulletTwo || posBulletTwo + 1 == posBulletOne)
+    {
+      posBulletTwo = -1;
+      posBulletOne = -1;
+      activeShot = 0;
+      Serial.println("Bullets have clashed and cancelled each other!");
+    }
+  }
+
+  //Then move the bullets forward by adjusting their posBullet var values ONLY IF THEY WERE ALREADY NOT -1
   if (posBulletOne > -1)
   {
     posBulletOne--;
     if (posBulletOne == -1)
-    {
+    {                  // This means the bullet hit the other player
       activeShot -= 1; //Remove the bullet record
+      scoreA += 1;     //Player One gains a point
+      Serial.println("Player ONE has been HIT!");
+      Serial.print("New score is: ");
+      Serial.print(scoreA);
+      Serial.print(" - ");
+      Serial.println(scoreB);
     }
   }
 
@@ -165,13 +185,17 @@ void FirstGameLoop() // This will be the loop where our first game will run
 
   //Reset the second bullet if it goes off-grid
   if (posBulletTwo > 7)
-  {
+  {                    // Hit means the bullet hit PLayer one,
     posBulletTwo = -1; //Reset Position
     activeShot -= 2;   //Remove the bullet record
+    scoreB += 1;
+    Serial.println("Player ONE has been HIT!");
+    Serial.print("New score is: ");
+    Serial.print(scoreA);
+    Serial.print(" - ");
+    Serial.println(scoreB);
   }
-
   //One of them moves towards right while the other moves to the left
-  //Later we will add the code to check for collisions
 
   // If a player is stunned, their stun timer decreases by one in each frame
   //Check Stun
@@ -198,6 +222,17 @@ void FirstGameLoop() // This will be the loop where our first game will run
   Serial.print("Bullet two: ");
   Serial.println(posBulletTwo);
   */
+
+  if (scoreA == 5) //Game over, return to menu
+  {
+    Serial.print("GAME OVER, PLAYER ONE HAS WON!");
+  }
+  if (scoreB == 5) //Game over, return to menu
+  {
+    Serial.print("GAME OVER, PLAYER TWO HAS WON!");
+  }
+
+  delay(runDelay);
 }
 
 void Diagnostics()
@@ -236,7 +271,7 @@ void setup()
   pinMode(playerOne, INPUT); //Setting up input pin for P1
   pinMode(playerOne, INPUT); //Setting up input pin for P2
 
-  Diagnostics();// Run this function to diagnose your circuit
+  //Diagnostics();// Run this function to diagnose your circuit
 
   //We will ask for input regarding the game mode, then execute that mode on the loop
 
