@@ -14,8 +14,8 @@ const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //Ledpins array
 //At first, I tried to use an array that was to keep track of the bullets in the grid. Specifically, which LED lights up because of whose bullet
 //But that didn't seem to work fine and was quite buggy.
 //This time, I will try creating seperate variables which will hold the positions of the bullets, if they are present.
-int posBulletOne = -1; //We are initialising them from -1 since, 0 will actually be a position we will use
-int posBulletTwo = -1; //When a player shoots, we will set these variables to their designated bullet start positions
+volatile int posBulletOne = -1; //We are initialising them from -1 since, 0 will actually be a position we will use
+volatile int posBulletTwo = -1; //When a player shoots, we will set these variables to their designated bullet start positions
 //With each frame, bullets will be moved with respect to these two values
 
 volatile int activeShot = 0;
@@ -34,9 +34,14 @@ void PunishPlayerOne()
   Serial.println("p1p");
   posBulletOne = -1; //Reset the bullet position and remove bullet from the activeShot record
   if (activeShot == 1)
+  {
     activeShot = 0;
+  }
+
   if (activeShot == 3)
+  {
     activeShot -= 1;
+  }
   detachInterrupt(digitalPinToInterrupt(playerOne));
   stunTimeOne = 5;
 }
@@ -91,15 +96,21 @@ void FirstGameLoop() // This will be the loop where our first game will run
   {                      // See if the player can shoot
     if (activeShot == 0) // If there are no bullets, we will attach two interrupts that allows both players to shoot
     {
-      attachInterrupt(digitalPinToInterrupt(playerOne), PlayerOneShoot, RISING);
-      attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerTwoShoot, RISING);
+      if (stunTimeTwo < 1)
+      {
+        attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerTwoShoot, RISING);
+      }
+      if (stunTimeOne < 1)
+      {
+        attachInterrupt(digitalPinToInterrupt(playerOne), PlayerOneShoot, RISING);
+      }
     }
     if (activeShot == 1 && stunTimeTwo < 1)
-    {
+    { //There is a bullet which belongs to player 1
       attachInterrupt(digitalPinToInterrupt(playerTwo), PlayerTwoShoot, RISING);
     }
     if (activeShot == 2 && stunTimeOne < 1)
-    {
+    { // There is a bullet which belongs to player 2
       attachInterrupt(digitalPinToInterrupt(playerOne), PlayerOneShoot, RISING);
     }
     //This section could possibly be simplified to use less lines of code, but I am focusing on the function for now
@@ -177,7 +188,6 @@ void FirstGameLoop() // This will be the loop where our first game will run
   Serial.print("Bullet two: ");
   Serial.println(posBulletTwo);
   */
- 
 }
 
 void Diagnostics()
