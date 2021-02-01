@@ -43,7 +43,7 @@ unsigned long time_guess = 0;
 unsigned long target_start = 0;
 unsigned long guess_start = 0;
 
-int nextPlayer = 0; // We will change this value to change the guessing and target setting player
+int nextPlayer = 3; // We will change this value to change the guessing and target setting player
 bool targetSet = false;
 bool guessSet = false;
 bool phaseSet = false;
@@ -95,6 +95,14 @@ void StartGuessTime() //Same process we used to record the target time
   guess_start = millis();
   lights = true;
   attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, FALLING);
+}
+
+void ResetSet()
+{
+  guessSet = false;
+  targetSet = false;
+  phaseSet = false;
+  phaseGuess = false;
 }
 
 void PunishPlayerOne()
@@ -351,6 +359,7 @@ void SecondGameLoop() // This will be the loop where the second game will run
     {
       scoreA++;
     }
+    ResetSet();
   }
 }
 
@@ -403,6 +412,8 @@ void loop()
   // First or second game will be run according to the information coming from the setup function
   //TODO: Add if for the game select
   //FirstGameLoop();
+
+  SecondGameLoop();
 
   //GameOver Check for both games
   //TODO: Add return to menu
