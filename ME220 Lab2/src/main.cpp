@@ -59,8 +59,7 @@ void SwitchPlayer() // Simple function to switch players
   {
     nextPlayer = 3;
   }
-
-  if (nextPlayer == 3)
+  else if (nextPlayer == 3)
   {
     nextPlayer = 2;
   }
@@ -68,8 +67,10 @@ void SwitchPlayer() // Simple function to switch players
 
 void SetTargetTime()
 {
+  noInterrupts();
   if (millis() - target_start > debounceDelay)
   { //only register button after debouncing
+    Serial.println("rb");
     detachInterrupt(digitalPinToInterrupt(nextPlayer));
     time_target = millis() - target_start;
     targetSet = true;
@@ -77,17 +78,22 @@ void SetTargetTime()
     SwitchPlayer();
     lights = false;
   }
+  interrupts();
 }
 void StartTargetTime() //We record the time when the button is pressed down,
 {                      // remove the interrupt, then attach another to record when the button is released
+  noInterrupts();
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
+  Serial.println("pd");
   target_start = millis();
   lights = true;
   attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, LOW);
+  interrupts();
 }
 
 void SetGuessTime()
 {
+  noInterrupts();
   if (millis() - guess_start > debounceDelay)
   {
     detachInterrupt(digitalPinToInterrupt(nextPlayer));
@@ -95,14 +101,17 @@ void SetGuessTime()
     guessSet = true;
     lights = false;
   }
+  interrupts();
 }
 
 void StartGuessTime() //Same process we used to record the target time
 {
+  noInterrupts();
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
   guess_start = millis();
   lights = true;
   attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, LOW);
+  interrupts();
 }
 
 void ResetSet()
@@ -314,7 +323,6 @@ void FirstGameLoop() // This will be the loop where our first game will run
 }
 
 void SecondGameLoop() // This will be the loop where the second game will run
-
 {
 
   //We attach the interrupt to the player who will be guessing
@@ -325,7 +333,7 @@ void SecondGameLoop() // This will be the loop where the second game will run
       Serial.print("Player ");
       Serial.print(nextPlayer);
       Serial.println(" will be setting target");
-      attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, RISING);
+      attachInterrupt(digitalPinToInterrupt(nextPlayer), StartTargetTime, RISING);
       phaseSet = true;
       delay(runDelay);
     }
@@ -342,7 +350,7 @@ void SecondGameLoop() // This will be the loop where the second game will run
       Serial.print("Player ");
       Serial.print(nextPlayer);
       Serial.println(" will now try to guess the time.");
-      attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, RISING);
+      attachInterrupt(digitalPinToInterrupt(nextPlayer), StartGuessTime, RISING);
       phaseGuess = true;
       delay(runDelay);
     }
@@ -434,12 +442,22 @@ void setup()
 
   //TODO: Add selection
   Serial.println("Ready");
+
+  Serial.println("Switch func");
+  Serial.println(nextPlayer);
+  Serial.println("Should change now");
+  Serial.println(nextPlayer);
+  Serial.println("Should change now");
+  Serial.println(nextPlayer);
+  Serial.println("Should change now");
+  Serial.println(nextPlayer);
+  Serial.println("Should change now");
+  Serial.println(nextPlayer);
 }
 
 void loop()
 {
   // First or second game will be run according to the information coming from the setup function
-  //TODO: Add if for the game select
 
   switch (gameMode)
   {
