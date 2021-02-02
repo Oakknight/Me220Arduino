@@ -43,10 +43,10 @@ int stunTimeTwo = 0; //They will be set to 5 at the punish function, then will b
 
 //General variables for the second game
 
-unsigned long time_target = 0; //These are of type long since time in ms could be a pretty big number
-unsigned long time_guess = 0;
-unsigned long target_start = 0;
-unsigned long guess_start = 0;
+long time_target = 0; //These are of type long since time in ms could be a pretty big number
+long time_guess = 0;
+long target_start = 0;
+long guess_start = 0;
 
 volatile int nextPlayer = 3; // We will change this value to change the guessing and target setting player
 bool targetSet = false;
@@ -73,51 +73,45 @@ void SwitchPlayer() // Simple function to switch players
 
 void SetTargetTime()
 {
-  noInterrupts();
-  if (millis() - target_start > debounceDelay)
+  if (micros() / 1000 - target_start > debounceDelay)
   { //only register button after debouncing
-    Serial.println("rb");
+    // Serial.println("rb");
     detachInterrupt(digitalPinToInterrupt(nextPlayer));
-    time_target = millis() - target_start;
+    noInterrupts();
+    time_target = micros() / 1000 - target_start;
     targetSet = true;
     //After recording the time button was pressed down, we change the nextPlayer value
     SwitchPlayer();
     lights = false;
   }
-  interrupts();
 }
 void StartTargetTime() //We record the time when the button is pressed down,
 {                      // remove the interrupt, then attach another to record when the button is released
-  noInterrupts();
+
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
-  Serial.println("pd");
-  target_start = millis();
+  target_start = micros() / 1000;
   lights = true;
-  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, LOW);
-  interrupts();
+  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, FALLING);
 }
 
 void SetGuessTime()
 {
-  noInterrupts();
-  if (millis() - guess_start > debounceDelay)
+
+  if (micros() / 1000 - guess_start > debounceDelay)
   {
     detachInterrupt(digitalPinToInterrupt(nextPlayer));
-    time_guess = millis() - guess_start;
+    time_guess = micros() / 1000 - guess_start;
     guessSet = true;
     lights = false;
   }
-  interrupts();
 }
 
 void StartGuessTime() //Same process we used to record the target time
 {
-  noInterrupts();
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
-  guess_start = millis();
+  guess_start = micros() / 1000;
   lights = true;
-  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, LOW);
-  interrupts();
+  attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, FALLING);
 }
 
 void ResetSet()
@@ -126,14 +120,29 @@ void ResetSet()
   targetSet = false;
   phaseSet = false;
   phaseGuess = false;
-  //SwitchPlayer();
+  lastPressTimeA = 0;
+  lastPressTimeB = 0;
+  time_guess = 0;
+  time_target = 0;
+  lights = false;
+  target_start = 0;
+  guess_start = 0;
+}
+
+void ResetGame()
+{
+  ResetSet();
+  scoreA = 0;
+  scoreB = 0;
+  gameMode = 0;
+  Serial.println("Returning to the menu");
 }
 
 void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
-  noInterrupts();
-  if (millis() - lastPressTimeA > debounceDelay) //Only execute if enough time to debounce has passed
+
+  if (micros() / 1000 - lastPressTimeA > debounceDelay) //Only execute if enough time to debounce has passed
   {
     //Serial.println("p1p");
     digitalWrite(ledPins[posBulletOne], LOW);
@@ -144,16 +153,14 @@ void PunishPlayerOne()
       activeShot -= 1;
     detachInterrupt(digitalPinToInterrupt(playerOne));
     stunTimeOne = 5;
-    interrupts();
   }
 }
 
 void PunishPlayerTwo()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
-  noInterrupts();
 
-  if (millis() - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
+  if (micros() / 1000 - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
   {
     //Serial.println("p2p");
     digitalWrite(ledPins[posBulletTwo], LOW);
@@ -165,22 +172,20 @@ void PunishPlayerTwo()
     detachInterrupt(digitalPinToInterrupt(playerTwo));
     stunTimeTwo = 5;
   }
-  interrupts();
 }
 
 void PlayerOneShoot()
 {                       // When the first player shoots, we record the bullet and then detach their interrupt to shoot
   if (stunTimeOne == 0) // We don't want the player to shoot if they are already stunned
   {
-    noInterrupts();
+
     Serial.println("p1s");
     detachInterrupt(digitalPinToInterrupt(playerOne));
     posBulletOne = 7; //The bullet is LED 8
     activeShot += 1;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerOne), PunishPlayerOne, RISING);
-    lastPressTimeA = millis(); //Save the button press time of Player One
-    interrupts();
+    lastPressTimeA = micros() / 1000; //Save the button press time of Player One
   }
 }
 
@@ -188,15 +193,14 @@ void PlayerTwoShoot()
 { // When the second player shoots, we record the bullet and then detach their interrupt to shoot
   if (stunTimeTwo == 0)
   {
-    noInterrupts();
+
     Serial.println("p2s");
     detachInterrupt(digitalPinToInterrupt(playerTwo));
     posBulletTwo = 0; //The bullet is at LED 1
     activeShot += 2;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerTwo), PunishPlayerTwo, RISING);
-    lastPressTimeB = millis(); //Save the button pres time of Player Two
-    interrupts();
+    lastPressTimeB = micros() / 1000; //Save the button pres time of Player Two
   }
   //Nothing happens if the player is stunned
 }
@@ -306,6 +310,7 @@ void FirstGameLoop() // This will be the loop where our first game will run
     Serial.print("P2 is stunned: ");
     Serial.println(stunTimeTwo);
     stunTimeTwo--;
+    posBulletTwo = -1;
   }
 
   if (stunTimeOne > 0)
@@ -314,6 +319,7 @@ void FirstGameLoop() // This will be the loop where our first game will run
     Serial.print("P1 is stunned: ");
     Serial.println(stunTimeOne);
     stunTimeOne--;
+    posBulletOne = -1;
   }
   // Decreasing the stun after the delay in order to prevent a possible bug where the player can shoot when they still have 1 more frame to wait
 
@@ -339,9 +345,9 @@ void SecondGameLoop() // This will be the loop where the second game will run
       Serial.print("Player ");
       Serial.print(nextPlayer);
       Serial.println(" will be setting target");
-      attachInterrupt(digitalPinToInterrupt(nextPlayer), StartTargetTime, RISING);
       phaseSet = true;
       delay(runDelay);
+      attachInterrupt(digitalPinToInterrupt(nextPlayer), StartTargetTime, RISING);
     }
   }
   //We will change the "nextPlayer" to keep track of which player will go
@@ -356,9 +362,11 @@ void SecondGameLoop() // This will be the loop where the second game will run
       Serial.print("Player ");
       Serial.print(nextPlayer);
       Serial.println(" will now try to guess the time.");
-      attachInterrupt(digitalPinToInterrupt(nextPlayer), StartGuessTime, RISING);
-      phaseGuess = true;
+
       delay(runDelay);
+      phaseGuess = true;
+      interrupts();
+      attachInterrupt(digitalPinToInterrupt(nextPlayer), StartGuessTime, RISING);
     }
   }
 
@@ -366,22 +374,27 @@ void SecondGameLoop() // This will be the loop where the second game will run
   // We want the LEDs to light up whenever a button is being pressed
 
   //Set all LEDs to their required state
-  for (size_t i = 0; i < 8; i++)
+  noInterrupts();
+  for (int i = 0; i < 8; i++)
   {
     digitalWrite(ledPins[i], lights);
   }
+  interrupts();
 
   if (guessSet) // If a guess has been made, we will compare the target and guess values to find a winner for the set.
   {
-    if (abs(time_target - time_guess) > time_target / 10) // If the time difference is not in our accepted range, target setting player wins.
+    int error = abs(time_target - time_guess);
+    if (error < time_target / 10) // If the time difference is not in our accepted range, target setting player wins.
     {
-      SwitchPlayer();
+      // SwitchPlayer();
       winner = nextPlayer;
-      SwitchPlayer();
+      //SwitchPlayer();
     }
     else
     {
+      SwitchPlayer();
       winner = nextPlayer;
+      SwitchPlayer();
     }
     Serial.print("Player ");
     Serial.print(winner);
@@ -402,14 +415,6 @@ void SecondGameLoop() // This will be the loop where the second game will run
     }
     ResetSet();
   }
-}
-
-void ResetGame()
-{
-  scoreA = 0;
-  scoreB = 0;
-  gameMode = 0;
-  Serial.println("Returning to the menu");
 }
 
 void Diagnostics()
@@ -454,8 +459,8 @@ void setup()
 
   //TODO: Add selection
   Serial.println("Ready");
-
-  /* Serial.println("Switch func");
+  /*
+  Serial.println("Switch func");
   Serial.println(nextPlayer);
   SwitchPlayer();
   Serial.println("Should change now");
@@ -468,13 +473,15 @@ void setup()
   Serial.println(nextPlayer);
   SwitchPlayer();
   Serial.println("Should change now");
-  Serial.println(nextPlayer); */
+  Serial.println(nextPlayer);
+  // */
 }
 
 void loop()
 {
   // First or second game will be run according to the information coming from the setup function
 
+  //*
   switch (gameMode)
   {
   case 0:
@@ -509,6 +516,9 @@ void loop()
     Serial.println("Weird input");
     break;
   }
+
+  //*/
+
   //FirstGameLoop();
 
   //SecondGameLoop();
