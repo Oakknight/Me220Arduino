@@ -142,7 +142,7 @@ void PunishPlayerOne()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
 
-  if (micros() - lastPressTimeA > debounceDelay) //Only execute if enough time to debounce has passed
+  if (micros()/1000 - lastPressTimeA > debounceDelay) //Only execute if enough time to debounce has passed
   {
     //Serial.println("p1p");
     digitalWrite(ledPins[posBulletOne], LOW);
@@ -160,7 +160,7 @@ void PunishPlayerTwo()
 { //If the player tries to shoot while there is still a bullet, they will be stunned.
   //We detach the punishing interrupt and add a stun counter.
 
-  if (micros() - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
+  if (micros()/1000 - lastPressTimeB > debounceDelay) //Only execute if enough time to debounce has passed
   {
     //Serial.println("p2p");
     digitalWrite(ledPins[posBulletTwo], LOW);
@@ -185,7 +185,7 @@ void PlayerOneShoot()
     activeShot += 1;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerOne), PunishPlayerOne, RISING);
-    lastPressTimeA = micros(); //Save the button press time of Player One
+    lastPressTimeA = micros()/1000; //Save the button press time of Player One
   }
 }
 
@@ -200,7 +200,7 @@ void PlayerTwoShoot()
     activeShot += 2;
     //We then attach the new interrupt to punish the player if they try to shoot again
     attachInterrupt(digitalPinToInterrupt(playerTwo), PunishPlayerTwo, RISING);
-    lastPressTimeB = micros(); //Save the button pres time of Player Two
+    lastPressTimeB = micros()/1000; //Save the button pres time of Player Two
   }
   //Nothing happens if the player is stunned
 }
