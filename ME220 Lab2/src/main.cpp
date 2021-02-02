@@ -73,7 +73,6 @@ void SwitchPlayer() // Simple function to switch players
 
 void SetTargetTime()
 {
-  //noInterrupts();
   if (millis() - target_start > debounceDelay)
   { //only register button after debouncing
     // Serial.println("rb");
@@ -84,22 +83,22 @@ void SetTargetTime()
     SwitchPlayer();
     lights = false;
   }
-  //interrupts();
+  
 }
 void StartTargetTime() //We record the time when the button is pressed down,
 {                      // remove the interrupt, then attach another to record when the button is released
-  //noInterrupts();
+  
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
   //Serial.println("pd");
   target_start = millis();
   lights = true;
   attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, LOW);
-  //interrupts();
+  
 }
 
 void SetGuessTime()
 {
-  //noInterrupts();
+  
   if (millis() - guess_start > debounceDelay)
   {
     detachInterrupt(digitalPinToInterrupt(nextPlayer));
@@ -107,17 +106,17 @@ void SetGuessTime()
     guessSet = true;
     lights = false;
   }
-  //interrupts();
+ 
 }
 
 void StartGuessTime() //Same process we used to record the target time
 {
-  // noInterrupts();
+ 
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
   guess_start = millis();
   lights = true;
   attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, LOW);
-  //interrupts();
+  
 }
 
 void ResetSet()
@@ -134,7 +133,15 @@ void ResetSet()
   target_start = 0;
   guess_start = 0;
 
-  //SwitchPlayer();
+}
+
+void ResetGame()
+{
+  ResetSet();
+  scoreA = 0;
+  scoreB = 0;
+  gameMode = 0;
+  Serial.println("Returning to the menu");
 }
 
 void PunishPlayerOne()
@@ -412,13 +419,7 @@ void SecondGameLoop() // This will be the loop where the second game will run
   }
 }
 
-void ResetGame()
-{
-  scoreA = 0;
-  scoreB = 0;
-  gameMode = 0;
-  Serial.println("Returning to the menu");
-}
+
 
 void Diagnostics()
 { // A function to see if all leds have been connected correctly
