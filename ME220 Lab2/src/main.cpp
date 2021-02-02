@@ -5,9 +5,9 @@
 #define playerTwo 2 //red button, right, starting from pin 4, index 0
 // For reference, we will take blue button on the left and red button on the right
 
-#define runDelay 500      //delay in ms before light moves to the next point, Game speed property
+#define runDelay 200      //delay in ms before light moves to the next point, Game speed property
 #define numPins 8         //number of LEDS
-#define debounceDelay 100 // will be used for debouncing
+#define debounceDelay 150 // will be used for debouncing
 
 const int ledPins[] = {4, 5, 6, 7, 8, 9, 10, 11}; //Ledpins array
 
