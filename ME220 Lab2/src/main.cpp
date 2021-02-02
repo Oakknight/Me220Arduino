@@ -73,10 +73,10 @@ void SwitchPlayer() // Simple function to switch players
 
 void SetTargetTime()
 {
-  noInterrupts();
+  //noInterrupts();
   if (millis() - target_start > debounceDelay)
   { //only register button after debouncing
-    Serial.println("rb");
+    // Serial.println("rb");
     detachInterrupt(digitalPinToInterrupt(nextPlayer));
     time_target = millis() - target_start;
     targetSet = true;
@@ -84,22 +84,22 @@ void SetTargetTime()
     SwitchPlayer();
     lights = false;
   }
-  interrupts();
+  //interrupts();
 }
 void StartTargetTime() //We record the time when the button is pressed down,
 {                      // remove the interrupt, then attach another to record when the button is released
-  noInterrupts();
+  //noInterrupts();
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
-  Serial.println("pd");
+  //Serial.println("pd");
   target_start = millis();
   lights = true;
   attachInterrupt(digitalPinToInterrupt(nextPlayer), SetTargetTime, LOW);
-  interrupts();
+  //interrupts();
 }
 
 void SetGuessTime()
 {
-  noInterrupts();
+  //noInterrupts();
   if (millis() - guess_start > debounceDelay)
   {
     detachInterrupt(digitalPinToInterrupt(nextPlayer));
@@ -107,17 +107,17 @@ void SetGuessTime()
     guessSet = true;
     lights = false;
   }
-  interrupts();
+  //interrupts();
 }
 
 void StartGuessTime() //Same process we used to record the target time
 {
-  noInterrupts();
+  // noInterrupts();
   detachInterrupt(digitalPinToInterrupt(nextPlayer));
   guess_start = millis();
   lights = true;
   attachInterrupt(digitalPinToInterrupt(nextPlayer), SetGuessTime, LOW);
-  interrupts();
+  //interrupts();
 }
 
 void ResetSet()
@@ -126,6 +126,14 @@ void ResetSet()
   targetSet = false;
   phaseSet = false;
   phaseGuess = false;
+  lastPressTimeA = 0;
+  lastPressTimeB = 0;
+  time_guess = 0;
+  time_target = 0;
+  lights = false;
+  target_start = 0;
+  guess_start = 0;
+
   //SwitchPlayer();
 }
 
@@ -366,7 +374,7 @@ void SecondGameLoop() // This will be the loop where the second game will run
   // We want the LEDs to light up whenever a button is being pressed
 
   //Set all LEDs to their required state
-  for (size_t i = 0; i < 8; i++)
+  for (int i = 0; i < 8; i++)
   {
     digitalWrite(ledPins[i], lights);
   }
