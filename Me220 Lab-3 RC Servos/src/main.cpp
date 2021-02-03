@@ -41,14 +41,18 @@ void loop()
 
 #include <Servo.h>
 
+#define servoPin 9
+#define potPin A5
+
 Servo myservo;  // create servo object to control the servo
 
 int pos = 150;    // variable to store the servo position
 int newPos = 0; //This holds the new value we enter
+int potPos = 0;
 
 void setup() {
   Serial.begin(9600);
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  myservo.attach(servoPin);  // attaches the servo on pin 9 to the servo object
 }
 
 void serialEvent()
@@ -70,11 +74,31 @@ void serialEvent()
   }
 }
 
+void convertPotToServo(int potValue){ // This function will be used to convert the value we get from the POT to a degree between 0-180
+
+  Serial.println(potValue);
+  potPos = potValue * 100;
+  pos = potPos / 568;
+  Serial.println(pos);
+  
+  
+}
+
 // I will be using values [0,180] instead of [-90,90], since it is easier to work with all positive integers
 
 void loop() {
 
+// Using this line in combination with the serialEvent function enables us to move the servo by entering values between 0-180
+//Or we can use it with the Potentiometer.
+
+convertPotToServo(analogRead(potPin));
 myservo.write(pos);
+
+
+
+
+
+
   /*
   for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
@@ -86,5 +110,5 @@ myservo.write(pos);
     delay(15);                       // waits 15ms for the servo to reach the position
   }
   /*/
-  serialEvent();
+  //serialEvent(); //This is used to move the servo using position inputs between 0-180
 }
