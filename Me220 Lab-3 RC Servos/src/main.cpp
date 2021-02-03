@@ -92,6 +92,15 @@ void ConvertPotToServo(int potValue)
   myservo.write(pos);
 }
 
+void SetAndWaitServo(int position, int waitTime) // First argument is position, second is time
+{                                                //This function sets the servo to the position we want for the time we want.
+  for (size_t i = 0; i < waitTime; i++)
+  {
+    myservo.write(position);
+    delay(1);
+  }
+}
+
 void GetCommProtocol()
 {
   Serial.println("Please enter input for the movement pattern");
@@ -133,6 +142,7 @@ void GetCommProtocol()
     }
     Serial.println("We will wait at: " + waitAt + " for " + waitFor);
     //Serial.println(waitAt);
+    SetAndWaitServo(waitAt.toInt(), waitFor.toInt());
   }
 
   //Now that we got our string, we need to process it
