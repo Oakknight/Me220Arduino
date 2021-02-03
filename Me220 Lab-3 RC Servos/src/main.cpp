@@ -102,7 +102,7 @@ void GetCommProtocol()
   commProtocol = Serial.readString();
   Serial.println("You have entered: " + commProtocol);
   if (commProtocol.charAt(0) == 's' && commProtocol.charAt(commProtocol.length() - 1 == 'e'))
-  {
+  { // Check if the string starts with s and ends with an e, to be accepted by our protocol
     Serial.println("Processing");
     isValid = true;
   }
@@ -110,6 +110,29 @@ void GetCommProtocol()
   {
     Serial.println("Your input is invalid");
     isValid = false;
+  }
+
+  if (isValid)
+  { //only process the string if it is in valid format
+    String waitFor = "";
+    String waitAt = "";
+    for (int i = 1; i < (int)commProtocol.length() - 1; i++)
+    {
+      while (i < commProtocol.indexOf(':')) //this is the value for the first position
+      {
+        waitAt += commProtocol.charAt(i); // Adds every charachter to our string till we see the ':'
+        i++;
+      }
+      i++;
+
+      while (i < commProtocol.indexOf(','))
+      {
+        waitFor += commProtocol.charAt(i);
+        i++;
+      }
+    }
+    Serial.println("We will wait at: " + waitAt + " for " + waitFor);
+    //Serial.println(waitAt);
   }
 
   //Now that we got our string, we need to process it
