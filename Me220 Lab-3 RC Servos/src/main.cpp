@@ -50,6 +50,9 @@ unsigned long pos = 150;  // variable to store the servo position
 unsigned long newPos = 0; //This holds the new value we enter
 unsigned long potPos = 0;
 
+String commProtocol = "";
+bool isValid = false;
+
 void setup()
 {
   Serial.begin(9600);
@@ -78,7 +81,7 @@ void serialEvent()
   myservo.write(pos);
 }
 
-void convertPotToServo(int potValue)
+void ConvertPotToServo(int potValue)
 { // This function will be used to convert the value we get from the POT to a degree between 0-180
 
   Serial.println(potValue);
@@ -89,12 +92,37 @@ void convertPotToServo(int potValue)
   myservo.write(pos);
 }
 
+void GetCommProtocol()
+{
+  Serial.println("Please enter input for the movement pattern");
+  while (Serial.available() == 0)
+  {
+    //Wait till we enter an input
+  }
+  commProtocol = Serial.readString();
+  Serial.println("You have entered: " + commProtocol);
+  if (commProtocol.charAt(0) == 's' && commProtocol.charAt(commProtocol.length() - 1 == 'e'))
+  {
+    Serial.println("Processing");
+    isValid = true;
+  }
+  else
+  {
+    Serial.println("Your input is invalid");
+    isValid = false;
+  }
+
+  //Now that we got our string, we need to process it
+}
+
 // I will be using values [0,180] instead of [-90,90], since it is easier to work with all positive integers
 
 void loop()
 {
 
-  convertPotToServo(analogRead(potPin)); //Used to move the servo using the POT
+  //ConvertPotToServo(analogRead(potPin)); //Used to move the servo using the POT
 
-   //serialEvent(); //This is used to move the servo using position inputs between 0-180
+  GetCommProtocol();
+
+  //serialEvent(); //This is used to move the servo using position inputs between 0-180
 }
