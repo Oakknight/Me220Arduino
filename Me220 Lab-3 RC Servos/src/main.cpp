@@ -46,13 +46,14 @@ void loop()
 
 Servo myservo;  // create servo object to control the servo
 
-int pos = 150;    // variable to store the servo position
-int newPos = 0; //This holds the new value we enter
-int potPos = 0;
+unsigned long pos = 150;    // variable to store the servo position
+unsigned long newPos = 0; //This holds the new value we enter
+unsigned long potPos = 0;
 
 void setup() {
   Serial.begin(9600);
   myservo.attach(servoPin);  // attaches the servo on pin 9 to the servo object
+  
 }
 
 void serialEvent()
@@ -77,7 +78,8 @@ void serialEvent()
 void convertPotToServo(int potValue){ // This function will be used to convert the value we get from the POT to a degree between 0-180
 
   Serial.println(potValue);
-  potPos = potValue * 100;
+  potPos = potValue * 10; //When I multiplied it with 100 instead of 10, very weird stuff happened. It might have been overflown, but I couldn't grasp it
+  potPos = potPos * 10;
   pos = potPos / 568;
   Serial.println(pos);
   
