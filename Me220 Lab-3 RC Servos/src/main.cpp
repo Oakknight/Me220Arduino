@@ -53,6 +53,8 @@ unsigned long potPos = 0;
 String commProtocol = ""; // Our input for complex motion patters goes here
 bool isValid = false;
 
+int modeChosen = 0;
+
 // I will be using values [0,180] instead of [-90,90], since it is easier to work with all positive integers
 
 void setup()
@@ -190,10 +192,40 @@ void GetCommProtocol()
 
 void loop()
 {
+  if (modeChosen == 0)
+  {
+    Serial.println(" What would you like to do?");
+    Serial.println("Enter 1, to control the servo using POT");
+    Serial.println("Enter 2, to control the servo using the communication protocol");
+    Serial.println("Enter 3, to control the servo using raw position inputs");
+
+    while (Serial.available() == 0)
+    {
+      // Wait till input
+    }
+    modeChosen = Serial.parseInt();
+  }
+
+  switch (modeChosen)
+  {
+  case 1:
+    ConvertPotToServo(analogRead(potPin));
+    break;
+  case 2:
+    GetCommProtocol();
+    break;
+  case 3:
+    serialEvent();
+    break;
+
+  default:
+    Serial.println("wrong input, please reset");
+    break;
+  }
 
   //ConvertPotToServo(analogRead(potPin)); //Used to move the servo using the POT
 
-  GetCommProtocol();
+  //GetCommProtocol(); // Used to give complex motion patterns to the servo using a protocol
 
   //serialEvent(); //This is used to move the servo using position inputs between 0-180
 }
