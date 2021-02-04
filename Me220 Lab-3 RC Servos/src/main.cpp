@@ -151,20 +151,23 @@ void GetCommProtocol()
       }
 
       i++; // We increment i one more time to account for ':'
-      for (size_t j = 0; j < i; j++)
+
+      for (size_t j = 0; j < i; j++) //Cleaning up the string
       {
         commProtocol.setCharAt(j, 'a');
       }
 
-      while (i < commProtocol.indexOf(','))
+      while (i < commProtocol.indexOf('e'))
       {
+        if (commProtocol.charAt(i) == ',')
+          break;
         waitFor += commProtocol.charAt(i);
         i++;
       }
 
       // After we have processed a portion of the string, we want to remove that portion
       // So that we can move on to the next pair
-      for (size_t j = 0; j < i; j++)
+      for (size_t j = 0; j < i; j++) //Clean up the string everytime we process a portion
       {
         commProtocol.setCharAt(j, 'a');
       }
@@ -183,7 +186,7 @@ void GetCommProtocol()
 // Some pattern strings to test for
 // s100:1500,60:3000e
 // s100:1500,60:3000,150:2000,15:600e
-// s100:1500,60:3000,150:2000,15:600,40:1200,90:1500,e
+// s100:1500,60:3000,150:2000,15:600,40:1200,90:1500e
 
 void loop()
 {
