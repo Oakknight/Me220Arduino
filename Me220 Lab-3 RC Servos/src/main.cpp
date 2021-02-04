@@ -53,7 +53,6 @@ unsigned long potPos = 0;
 String commProtocol = ""; // Our input for complex motion patters goes here
 bool isValid = false;
 
-
 // I will be using values [0,180] instead of [-90,90], since it is easier to work with all positive integers
 
 void setup()
@@ -139,34 +138,52 @@ void GetCommProtocol()
 
   if (isValid)
   { //only process the string if it is in valid format
+    int pairAmount = HowManyPairs(commProtocol);
     String waitFor = "";
     String waitAt = "";
     for (int i = 1; i < (int)commProtocol.length() - 1; i++)
-    {
+    { // This for loop will go back to the begginning only when it is finished a pair since we also increment the "i" inside the while loops
+
       while (i < commProtocol.indexOf(':')) //this is the value for the first position
       {
-        waitAt += commProtocol.charAt(i); // Adds every charachter to our string till we see the ':'
+        waitAt += commProtocol.charAt(i); // Adds every character after the between the 's' and ':' to the waitAt String
         i++;
       }
-      i++;
+
+      i++; // We increment i one more time to account for ':'
+      for (size_t j = 0; j < i; j++)
+      {
+        commProtocol.setCharAt(j, 'a');
+      }
 
       while (i < commProtocol.indexOf(','))
       {
         waitFor += commProtocol.charAt(i);
         i++;
       }
+
+      // After we have processed a portion of the string, we want to remove that portion
+      // So that we can move on to the next pair
+      for (size_t j = 0; j < i; j++)
+      {
+        commProtocol.setCharAt(j, 'a');
+      }
+      Serial.println("We will wait at: " + waitAt + " for " + waitFor);
+      SetAndWaitServo(waitAt.toInt(), waitFor.toInt());
+      // After we use the waitAt and waitFor values, we want to reset them in order to prepare for the next pair
+      waitAt = "";
+      waitFor = "";
     }
-    Serial.println("We will wait at: " + waitAt + " for " + waitFor);
 
-    Serial.println(HowManyPairs(commProtocol));
-
-    //SetAndWaitServo(waitAt.toInt(), waitFor.toInt());
+    Serial.println(pairAmount);
   }
 
   //Now that we got our string, we need to process it
 }
-// s100:1500,60:3000e 
-
+// Some pattern strings to test for
+// s100:1500,60:3000e
+// s100:1500,60:3000,150:2000,15:600e
+// s100:1500,60:3000,150:2000,15:600,40:1200,90:1500,e
 
 void loop()
 {
