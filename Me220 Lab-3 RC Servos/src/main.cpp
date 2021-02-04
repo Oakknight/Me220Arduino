@@ -5,7 +5,7 @@
 
 Here is the code I used for the first part
 
-void serialEvent() //I used serialEvent to update when a new value is entered. And it actually worked for some time.
+void SerialEvent() //I used serialEvent to update when a new value is entered. And it actually worked for some time.
 {
   while (Serial.available())
   {
@@ -189,6 +189,7 @@ void GetCommProtocol()
 // s100:1500,60:3000e
 // s100:1500,60:3000,150:2000,15:600e
 // s100:1500,60:3000,150:2000,15:600,40:1200,90:1500e
+// s100:1500,60:3000,150:2000,15:600,40:1200,90:1500,100:1500,60:3000,150:2000,15:600,26:3400,16:400,90:500,170:500,000,150:2000,15:600,26:3400,16:400,90:500,170:500e
 
 void loop()
 {
