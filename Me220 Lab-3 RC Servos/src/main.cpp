@@ -50,8 +50,11 @@ unsigned long pos = 150;  // variable to store the servo position
 unsigned long newPos = 0; //This holds the new value we enter
 unsigned long potPos = 0;
 
-String commProtocol = "";
+String commProtocol = ""; // Our input for complex motion patters goes here
 bool isValid = false;
+
+
+// I will be using values [0,180] instead of [-90,90], since it is easier to work with all positive integers
 
 void setup()
 {
@@ -101,6 +104,19 @@ void SetAndWaitServo(int position, int waitTime) // First argument is position, 
   }
 }
 
+// We will need a function to count the position-wait pairs in our string
+// We will do this by counting the number of ',' charachters and adding one
+int HowManyPairs(String inputString)
+{
+  int count = 1;
+  for (size_t i = 0; i < inputString.length(); i++)
+  {
+    if (inputString.charAt(i) == ',')
+      count++;
+  }
+  return count;
+}
+
 void GetCommProtocol()
 {
   Serial.println("Please enter input for the movement pattern");
@@ -141,14 +157,16 @@ void GetCommProtocol()
       }
     }
     Serial.println("We will wait at: " + waitAt + " for " + waitFor);
-    //Serial.println(waitAt);
-    SetAndWaitServo(waitAt.toInt(), waitFor.toInt());
+
+    Serial.println(HowManyPairs(commProtocol));
+
+    //SetAndWaitServo(waitAt.toInt(), waitFor.toInt());
   }
 
   //Now that we got our string, we need to process it
 }
+// s100:1500,60:3000e 
 
-// I will be using values [0,180] instead of [-90,90], since it is easier to work with all positive integers
 
 void loop()
 {
