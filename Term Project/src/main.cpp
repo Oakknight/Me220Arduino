@@ -1,19 +1,18 @@
 #include <Arduino.h>
 
-#define whiteBtn 2
-#define blueBtn 3
-#define analogPin A5
-
 //Right Engine Pins
-bool digital8 = false;
-bool digital9 = false;
-bool digital10 = false;
-const int rightEnable = 11;
+const int rightEnable = 10;
+const int rightA = 9;
+const int rightB = 8;
+
+int speedValueRight = 0;
 
 //Left Engine Pins
-bool digital2 = false;
-bool digital3 = true;
 const int leftEnable = 11;
+const int leftA = 12;
+const int leftB = 13;
+
+int speedValueLeft = 0;
 
 //Right Sensor Pins
 const int rightTrigger = 3;
@@ -27,21 +26,20 @@ int speedValue = 0;
 
 void setup()
 {
-  // put your setup code here, to run once:
 
   Serial.begin(9600);
-  // attachInterrupt(digitalPinToInterrupt(2), NotifyButtonWhite, RISING);
-  // attachInterrupt(digitalPinToInterrupt(3), NotifyButtonBlue, RISING);
 
-  pinMode(whiteBtn, INPUT);
-  pinMode(blueBtn, INPUT);
+  //Set the trigger and echo pins of the ultrasonic sensors
+  pinMode(rightTrigger, OUTPUT);
+  pinMode(leftTrigger, OUTPUT);
 
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
-  pinMode(11, OUTPUT);
-  pinMode(12, OUTPUT);
-  pinMode(13, OUTPUT);
+  pinMode(rightEcho, INPUT);
+  pinMode(leftEcho, INPUT);
+
+  for (int i = 8; i < 14; i++) // Set the Engine pins as output
+  {
+    pinMode(i, OUTPUT);
+  }
 
   digitalWrite(9, HIGH);
   digitalWrite(8, LOW);
@@ -57,34 +55,10 @@ void loop()
   {
   }
 
-  speedValue = Serial.parseInt(); //va
+  speedValue = Serial.parseInt();
 
   analogWrite(10, speedValue);
   analogWrite(11, speedValue);
 
   Serial.println(speedValue);
-
-  /*/
-  speedValue = analogRead(analogPin);
-  Serial.println(speedValue);
-
-  if (digitalRead(whiteBtn))
-  {
-    analogWrite(10, speedValue/4);
-  }
-  else
-  {
-    digitalWrite(10, LOW);
-  }
-
-  // speedValueue of the digital 10 pin is always same with digital 2
-  if (!digitalRead(blueBtn))
-    digitalWrite(8, HIGH);
-  else
-    digitalWrite(8, LOW);
-  if (digitalRead(blueBtn) && digitalRead(whiteBtn))
-    digitalWrite(9, HIGH);
-  else
-    digitalWrite(9, LOW);
-    //*/
 }
