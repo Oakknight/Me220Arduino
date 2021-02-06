@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include <HCSR04.h> // I am using the library at https://github.com/gamegine/HCSR04-ultrasonic-sensor-lib
+
 //Right Engine Pins
 const int rightEnable = 10;
 const int rightA = 9;
@@ -17,10 +19,12 @@ int speedValueLeft = 0;
 //Right Sensor Pins
 const int rightTrigger = 3;
 const int rightEcho = 4;
+HCSR04 hcRight(rightTrigger, rightEcho); //Initialise the sensor as an object (with the help of the library)
 
 //Left Sensor Pins
 const int leftTrigger = 6;
 const int leftEcho = 7;
+HCSR04 hcLeft(leftTrigger, leftEcho);
 
 int speedValue = 0;
 
@@ -41,18 +45,15 @@ void setup()
     pinMode(i, OUTPUT);
   }
 
-  digitalWrite(9, HIGH);
-  digitalWrite(8, LOW);
+  digitalWrite(rightA, HIGH);
+  digitalWrite(rightB, LOW);
 
-  digitalWrite(12, HIGH);
-  digitalWrite(13, LOW);
-}
-
-void loop()
-{
+  digitalWrite(leftA, HIGH);
+  digitalWrite(leftB, LOW);
 
   while (Serial.available() == 0)
   {
+    // Do nothing till input
   }
 
   speedValue = Serial.parseInt();
@@ -61,4 +62,15 @@ void loop()
   analogWrite(11, speedValue);
 
   Serial.println(speedValue);
+}
+
+void loop()
+{
+  Serial.print("The right sensor reads ");
+  Serial.println(hcRight.dist());
+
+  Serial.print("The left sensor reads ");
+  Serial.println(hcLeft.dist());
+
+  delay(500);
 }
