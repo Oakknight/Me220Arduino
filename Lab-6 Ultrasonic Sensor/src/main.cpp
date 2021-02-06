@@ -91,7 +91,7 @@ void setup()
   // setup pin directions
   pinMode(pingPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  Serial.begin(115200); // Starting Serial Terminal
+  Serial.begin(9600); // Starting Serial Terminal
   myservo.attach(servoPin);
 }
 
