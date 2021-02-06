@@ -1,29 +1,46 @@
-
 #include <Arduino.h>
+#include <Servo.h>
 
 const int pingPin = 12; // Trigger Pin of Ultrasonic Sensor
 const int echoPin = 11; // Echo Pin of Ultrasonic Sensor
+const int servoPin = 3; // Servo Pin
 long duration;          // duration of signal
 
-void setup()
-{
-  // setup pin directions
-  pinMode(pingPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-  Serial.begin(115200); // Starting Serial Terminal
+unsigned int max = 2500;
+unsigned int min = 500;
+
+Servo myservo;
+
+void moveServo(long distance)
+{                          /*
+  Y: This function will take the value coming from the ultrasonic sensor and convert it to a position output for the servo
+  It does this by using a normal linear equation formula AX + B = Y
+  when the formula is simplified, it comes down to (180*X - 180*min)/difference = y
+  The y value is the angle we want 
+  Also, the ideal min and max values of the ultrasonic sensor is 20 and 4000 mm respectively, but we do not always get those
+  values. If we use them by default, we might limit the operation range of our servo.
+  Therefore, I decided to allow it to "Self-calibrate", by adjusting its max-min values, if needs be.
+  /*/
+  unsigned int difference; // Will be used for linear mapping of values
+
+  unsigned int servoPosition = 0; // We will set the servo to this position
+
+  if (distance > max)
+  {
+    max = distance;
+  }
+  if (distance < min)
+  {
+    min = distance;
+  }
+
+  difference = max - min;
+  servoPosition = ((distance - min) * 180) / difference;
+  Serial.print("Servo pos is: ");
+  Serial.println(servoPosition);
+  myservo.write(servoPosition);
 }
 
-void loop()
-{
-  duration = readUltraSonic();
-  Serial.print("Total flight time: ");
-  Serial.print(duration);
-  Serial.print("us, total distance: ");
-  Serial.print(microseconds2Millimeters(duration));
-  Serial.print("mm");
-  Serial.println();
-  delay(250); // rest for a while
-}
 long readUltraSonic()
 {
   /*
@@ -40,7 +57,7 @@ and an echo is expected in return
   // listen for echo and return it, and use a time out since
   // sensor has a range of 4 meters, why is there a 25000
   // pleare read the help for pulseIn
-  return pulseIn(echoPin, HIGH, 25000);
+  return pulseIn(echoPin, HIGH, 25000); //Y:25000 is the value of timeout,the function returns 0 if no pulse received within the timeout
 }
 long microseconds2Millimeters(long microseconds)
 {
@@ -61,5 +78,32 @@ NOTE that you have to fix this so that the mm values returned
 matches the cm values displayed when you click on the sensor
 and move the target circle around
 */
-  return microseconds * 1 / 1;
+
+  //Y: Here is the microsecond to mm conversion
+  long dist = microseconds * 343;
+  dist = dist / 2000;
+
+  return dist;
+}
+
+void setup()
+{
+  // setup pin directions
+  pinMode(pingPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(115200); // Starting Serial Terminal
+  myservo.attach(servoPin);
+}
+
+void loop()
+{
+  duration = readUltraSonic();
+  Serial.print("Total flight time: ");
+  Serial.print(duration);
+  Serial.print("us, total distance: ");
+  Serial.print(microseconds2Millimeters(duration));
+  Serial.print("mm");
+  Serial.println();
+  moveServo(microseconds2Millimeters(duration));
+  delay(250); // rest for a while
 }
