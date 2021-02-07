@@ -7,14 +7,14 @@ const int rightEnable = 10;
 const int rightA = 9;
 const int rightB = 8;
 
-int speedValueRight = 0;
+int distanceRight = 0;
 
 //Left Engine Pins
 const int leftEnable = 11;
 const int leftA = 12;
 const int leftB = 13;
 
-int speedValueLeft = 0;
+int distanceLeft = 0;
 
 //Right Sensor Pins
 const int rightTrigger = 3;
@@ -26,23 +26,35 @@ const int leftTrigger = 6;
 const int leftEcho = 7;
 HCSR04 hcLeft(leftTrigger, leftEcho);
 
-int speedValue = 300; // Default speed of the vehicle
+// These are values to be tweaked to optimize cruise
+const int defaultSpeed = 300;   // Default speed of the vehicle, could be changed while working
+const int crashDistance = 10;   // After this distance, the ship will back off
+const int turnDistance = 40;    //  After this distance, the ship will start to slow down related engines
+const int deAccMultiplier = 50; // The value to be used for calculations while slowing down
 
-const int crashDistance = 20; // These are values to be tweaked to optimize drive
-const int turnDistance = 30;
-
-void Onwards()
-{ // Sets up for forwards motion
-  digitalWrite(rightA, HIGH);
+void Onwards(int speed)
+{                             // Sets up for forwards motion with given speed
+  digitalWrite(rightA, HIGH); // a high A value could mean the motors are set to go forwards
   digitalWrite(rightB, LOW);
 
   digitalWrite(leftA, HIGH);
   digitalWrite(leftB, LOW);
+
+  analogWrite(leftEnable, speed);
+  analogWrite(rightEnable, speed);
+}
+
+void haltTheEngines()
+{ // A method to stop the engines if needs be
+  digitalWrite(leftEnable, LOW);
+  digitalWrite(rightEnable, LOW);
+  Serial.println("We are stopping");
 }
 
 void backOff()
 {
   //Backs off
+  Serial.println("CAPTAAAAIN");
   while (hcLeft.dist() < 20)
   { //Left motor stops, right motor backwards
   }
@@ -50,12 +62,20 @@ void backOff()
 
 void slowLeft()
 {
-  //Slows down the left motor
+  //Slows down the left motor if there is an obstacle on the right
+  long leftEngineValue = distanceLeft * defaultSpeed / deAccMultiplier;
+  analogWrite(leftEnable, leftEngineValue);
+  Serial.print("Left engine is now at ");
+  Serial.println(leftEngineValue);
 }
 
 void slowRight()
 {
-  //Slows down the right motor
+  //Slows down the right motor if there is an obstacle on the left
+  long rightEngineValue = defaultSpeed * distanceLeft / deAccMultiplier;
+  analogWrite(rightEnable, rightEngineValue);
+  Serial.print("Right engine is now at ");
+  Serial.println(rightEngineValue);
 }
 
 void setup()
@@ -75,61 +95,52 @@ void setup()
     pinMode(i, OUTPUT);
   }
 
-  /*   while (Serial.available() == 0)
+  //Activate this function to be able to input default speed value from serial
+  /*  
+  while (Serial.available() == 0)
   {
     // Do nothing till input
   }
 
-  speedValue = Serial.parseInt();
+  defaultSpeed = Serial.parseInt();
+  Serial.println(defaultSpeed);
  */
-  analogWrite(leftEnable, speedValue);
-  analogWrite(rightEnable, speedValue);
 
-  // Serial.println(speedValue);
-
-  Onwards();
+  Onwards(defaultSpeed); // Starts the motion forwards with default speed
 }
 
 void loop()
 {
-  speedValueRight = hcRight.dist();
+  distanceRight = hcRight.dist();
   Serial.print("The right sensor reads ");
-  Serial.println(speedValueRight);
+  Serial.println(distanceRight);
 
-  speedValueLeft = hcLeft.dist();
+  distanceLeft = hcLeft.dist();
   Serial.print("The left sensor reads ");
-  Serial.println(speedValueLeft);
+  Serial.println(distanceLeft);
 
-  if (speedValueLeft < 10 && speedValueRight < 10)
-  { //Back of if we are about to crash
-    //backOff();
-    digitalWrite(leftEnable, LOW);
-    digitalWrite(rightEnable, LOW);
-    Serial.println("We are stopping");
-  }
-  else if (speedValueLeft < 30)
-  {
-    //slow right engine
-    //slowRight();
-    long rightEngineValue = speedValue * speedValueLeft / 100;
-    analogWrite(rightEnable, rightEngineValue);
-    Serial.print("Right engine is now at ");
-    Serial.println(rightEngineValue);
-  }
-  else if (speedValueRight < 30)
-  {
-    //slow left engine
-    //slowLeft();
-    long leftEngineValue = speedValueLeft * speedValue / 100;
-    analogWrite(leftEnable, speedValue * speedValueRight / 100);
-    Serial.print("Left engine is now at ");
-    Serial.println(leftEngineValue);
-  }
-  else
-  {
-    analogWrite(leftEnable, speedValue);
-    analogWrite(rightEnable, speedValue);
+  if (distanceLeft > 1 && distanceRight > 1)
+  { // Sometimes the sensors read 0 by fault, which can cause some problems with the engines
+
+    if (distanceLeft < 10 && distanceRight < 10)
+    { //Back of if we are about to crash
+      backOff();
+    }
+    else if (distanceLeft < turnDistance)
+    {
+      //slow right engine
+      slowRight();
+    }
+    else if (distanceRight < turnDistance)
+    {
+      //slow left engine
+      slowLeft();
+    }
+    else
+    {
+      Onwards(defaultSpeed);
+    }
   }
 
-  delay(500);
+  delay(1000); //Rest a bit
 }
