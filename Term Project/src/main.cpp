@@ -26,7 +26,37 @@ const int leftTrigger = 6;
 const int leftEcho = 7;
 HCSR04 hcLeft(leftTrigger, leftEcho);
 
-int speedValue = 0;
+int speedValue = 150; // Default speed of the vehicle
+
+const int crashDistance = 20; // These are values to be tweaked to optimize drive
+const int turnDistance = 30;
+
+void Onwards()
+{ // Sets up for forwards motion
+  digitalWrite(rightA, HIGH);
+  digitalWrite(rightB, LOW);
+
+  digitalWrite(leftA, HIGH);
+  digitalWrite(leftB, LOW);
+}
+
+void backOff()
+{
+  //Backs off
+  while (hcLeft.dist() < 20)
+  { //Left motor stops, right motor backwards
+  }
+}
+
+void slowLeft()
+{
+  //Slows down the left motor
+}
+
+void slowRight()
+{
+  //Slows down the right motor
+}
 
 void setup()
 {
@@ -45,32 +75,47 @@ void setup()
     pinMode(i, OUTPUT);
   }
 
-  digitalWrite(rightA, HIGH);
-  digitalWrite(rightB, LOW);
-
-  digitalWrite(leftA, HIGH);
-  digitalWrite(leftB, LOW);
-
-  while (Serial.available() == 0)
+  /*   while (Serial.available() == 0)
   {
     // Do nothing till input
   }
 
   speedValue = Serial.parseInt();
+ */
+  analogWrite(leftEnable, speedValue);
+  analogWrite(rightEnable, speedValue);
 
-  analogWrite(10, speedValue);
-  analogWrite(11, speedValue);
-
-  Serial.println(speedValue);
+  // Serial.println(speedValue);
 }
 
 void loop()
 {
+  speedValueRight = hcRight.dist();
   Serial.print("The right sensor reads ");
-  Serial.println(hcRight.dist());
+  Serial.println(speedValueRight);
 
+  speedValueLeft = hcLeft.dist();
   Serial.print("The left sensor reads ");
-  Serial.println(hcLeft.dist());
+  Serial.println(speedValueLeft);
+
+  if (speedValueLeft < 10 && speedValueRight < 10)
+  { //Back of if we are about to crash
+    //backOff();
+    digitalWrite(leftEnable, LOW);
+    digitalWrite(rightEnable, LOW);
+  }
+  else if (speedValueLeft < 30)
+  {
+    //slow right engine
+    //slowRight();
+    analogWrite(rightEnable, speedValue * speedValueLeft / 100);
+  }
+  else if (speedValueRight < 30)
+  {
+    //slow left engine
+    //slowLeft();
+    analogWrite(leftEnable, speedValue * speedValueRight / 100);
+  }
 
   delay(500);
 }
