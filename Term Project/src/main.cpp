@@ -26,7 +26,7 @@ const int leftTrigger = 6;
 const int leftEcho = 7;
 HCSR04 hcLeft(leftTrigger, leftEcho);
 
-int speedValue = 150; // Default speed of the vehicle
+int speedValue = 300; // Default speed of the vehicle
 
 const int crashDistance = 20; // These are values to be tweaked to optimize drive
 const int turnDistance = 30;
@@ -86,6 +86,8 @@ void setup()
   analogWrite(rightEnable, speedValue);
 
   // Serial.println(speedValue);
+
+  Onwards();
 }
 
 void loop()
@@ -103,18 +105,30 @@ void loop()
     //backOff();
     digitalWrite(leftEnable, LOW);
     digitalWrite(rightEnable, LOW);
+    Serial.println("We are stopping");
   }
   else if (speedValueLeft < 30)
   {
     //slow right engine
     //slowRight();
-    analogWrite(rightEnable, speedValue * speedValueLeft / 100);
+    long rightEngineValue = speedValue * speedValueLeft / 100;
+    analogWrite(rightEnable, rightEngineValue);
+    Serial.print("Right engine is now at ");
+    Serial.println(rightEngineValue);
   }
   else if (speedValueRight < 30)
   {
     //slow left engine
     //slowLeft();
+    long leftEngineValue = speedValueLeft * speedValue / 100;
     analogWrite(leftEnable, speedValue * speedValueRight / 100);
+    Serial.print("Left engine is now at ");
+    Serial.println(leftEngineValue);
+  }
+  else
+  {
+    analogWrite(leftEnable, speedValue);
+    analogWrite(rightEnable, speedValue);
   }
 
   delay(500);
