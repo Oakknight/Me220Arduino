@@ -28,8 +28,8 @@ HCSR04 hcLeft(leftTrigger, leftEcho);
 
 // These are values to be tweaked to optimize cruise
 const int defaultSpeed = 300;   // Default speed of the vehicle, could be changed while working
-const int crashDistance = 10;   // After this distance, the ship will back off
-const int turnDistance = 40;    //  After this distance, the ship will start to slow down related engines
+const int crashDistance = 16;   // After this distance, the ship will back off
+const int turnDistance = 50;    //  After this distance, the ship will start to slow down related engines
 const int deAccMultiplier = 50; // The value to be used for calculations while slowing down
 
 void Onwards(int speed)
@@ -55,8 +55,12 @@ void backOff()
 {
   //Backs off
   Serial.println("CAPTAAAAIN");
-  while (hcLeft.dist() < 20)
+  while (hcLeft.dist() < 30)
   { //Left motor stops, right motor backwards
+    digitalWrite(leftEnable, LOW);
+
+    digitalWrite(rightA, LOW);
+    digitalWrite(rightB, HIGH);
   }
 }
 
@@ -122,18 +126,22 @@ void loop()
   if (distanceLeft > 1 && distanceRight > 1)
   { // Sometimes the sensors read 0 by fault, which can cause some problems with the engines
 
-    if (distanceLeft < 10 && distanceRight < 10)
+    if (distanceLeft < crashDistance && distanceRight < crashDistance)
     { //Back of if we are about to crash
       backOff();
     }
     else if (distanceLeft < turnDistance)
     {
       //slow right engine
+      Serial.println("Obstacle on the left");
+      Serial.println("Slowing down the right engine");
       slowRight();
     }
     else if (distanceRight < turnDistance)
     {
       //slow left engine
+      Serial.println("Obstacle on the right");
+      Serial.println("Slowing down the left engine");
       slowLeft();
     }
     else
