@@ -16,7 +16,7 @@ const int leftB = 13;
 
 int distanceLeft = 0;
 
-//Right Sensor Pins
+//Right Sensor Pins //IMPORTANT NOTE: I messed up with left-right while connecting the HCSR04's so these should be inverted
 const int rightTrigger = 3;
 const int rightEcho = 4;
 HCSR04 hcRight(rightTrigger, rightEcho); //Initialise the sensor as an object (with the help of the library)
@@ -27,10 +27,10 @@ const int leftEcho = 7;
 HCSR04 hcLeft(leftTrigger, leftEcho);
 
 // These are values to be tweaked to optimize cruise
-const int defaultSpeed = 300;   // Default speed of the vehicle, could be changed while working
+const int defaultSpeed = 900;   // Default speed of the vehicle, could be changed while working
 const int crashDistance = 16;   // After this distance, the ship will back off
 const int turnDistance = 50;    //  After this distance, the ship will start to slow down related engines
-const int deAccMultiplier = 50; // The value to be used for calculations while slowing down
+const int deAccMultiplier = 80; // The value to be used for calculations while slowing down
 
 void Onwards(int speed)
 {                             // Sets up for forwards motion with given speed
@@ -40,8 +40,10 @@ void Onwards(int speed)
   digitalWrite(leftA, HIGH);
   digitalWrite(leftB, LOW);
 
-  analogWrite(leftEnable, speed);
-  analogWrite(rightEnable, speed);
+  //analogWrite(leftEnable, speed);
+  //analogWrite(rightEnable, speed);
+  digitalWrite(leftEnable, HIGH);
+  digitalWrite(rightEnable, HIGH);
 }
 
 void haltTheEngines()
@@ -130,19 +132,19 @@ void loop()
     { //Back of if we are about to crash
       backOff();
     }
-    else if (distanceLeft < turnDistance)
-    {
-      //slow right engine
-      Serial.println("Obstacle on the left");
-      Serial.println("Slowing down the right engine");
-      slowRight();
-    }
-    else if (distanceRight < turnDistance)
+    else if (distanceLeft < turnDistance) // These got inverted because I confused right and left with the Ultrasonic sensors
     {
       //slow left engine
       Serial.println("Obstacle on the right");
       Serial.println("Slowing down the left engine");
       slowLeft();
+    }
+    else if (distanceRight < turnDistance)
+    {
+      //slow right engine
+      Serial.println("Obstacle on the left");
+      Serial.println("Slowing down the right engine");
+      slowRight();
     }
     else
     {
