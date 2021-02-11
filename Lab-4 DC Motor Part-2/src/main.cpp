@@ -31,6 +31,7 @@ Therefore, we need three functions for the actions, and three variables to proce
 
 Example Inputs:
 AA500, will apply a pwm value of 500 to all motors
+AD700, will apply a pwm value of 700 to the DC mOtor
 
 SL, will stop the LED Motor
 
@@ -60,6 +61,7 @@ String dcValue = ""; // This will store our dc value if we have one
 
 void changeDirection()
 { //This function will change the direction of our motors
+  Serial.println("We are changing direction now");
 
   if (targetChar == 'L')
   {
@@ -99,21 +101,25 @@ void changeDirection()
     {
       digitalWrite(dcA, LOW);
       digitalWrite(dcB, HIGH);
+      dcDirection = 2;
     }
     else if (dcDirection == 2)
     {
       digitalWrite(dcA, HIGH);
       digitalWrite(dcB, LOW);
+      dcDirection = 1;
     }
     if (ledDirection == 1)
     {
       digitalWrite(ledA, LOW);
       digitalWrite(ledB, HIGH);
+      ledDirection = 2;
     }
     else if (ledDirection == 2)
     {
       digitalWrite(ledA, HIGH);
       digitalWrite(ledB, LOW);
+      ledDirection = 1;
     }
   }
 }
@@ -172,8 +178,8 @@ void setup()
   digitalWrite(dcA, HIGH);
   digitalWrite(dcB, LOW);
 
-  digitalWrite(ledEnable, HIGH);
-  digitalWrite(dcEnable, HIGH);
+  //digitalWrite(ledEnable, HIGH);
+  //digitalWrite(dcEnable, HIGH);
 }
 
 void loop()
@@ -188,6 +194,8 @@ void loop()
   targetChar = protocolInput.charAt(1); // Store our target
   Serial.print("Our target is: ");
   Serial.println(targetChar);
+  Serial.print("The operation is: ");
+  Serial.println(protocolInput.charAt(0));
 
   if (protocolInput.charAt(0) == 'C')
   {
