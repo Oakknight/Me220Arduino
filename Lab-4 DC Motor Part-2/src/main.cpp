@@ -34,10 +34,16 @@ AA500, will apply a pwm value of 500 to all motors
 AD700, will apply a pwm value of 700 to the DC mOtor
 
 SL, will stop the LED Motor
+SA, will stop all motors
+SD, will stop the dc motor
 
 CD, will change the direction of the DC Motor
 
 and so on...
+
+
+Side Note: I believe I might have somehow burned a motor or my driver during the demonstration, but the code is working.
+
 
 //*/
 
@@ -127,8 +133,10 @@ void changeDirection()
 void stopMotor()
 {
   //This will stop the specified motor(s)
+
   if (targetChar == 'A')
   {
+    Serial.println("Stopping all motors");
     digitalWrite(ledEnable, LOW);
     digitalWrite(dcEnable, LOW);
   }
@@ -136,16 +144,19 @@ void stopMotor()
   {
     //Stop Led Motor
     digitalWrite(ledEnable, LOW);
+    Serial.println("Stopping LED motor");
   }
   else if (targetChar == 'D')
   {
     //Stop DC Motor
     digitalWrite(dcEnable, LOW);
+    Serial.println("Stopping dc motor");
   }
 }
 
 void applydc()
 {
+  Serial.println("Applying duty cycle value");
   if (targetChar == 'A')
   {
     analogWrite(ledEnable, dcValue.toInt());
